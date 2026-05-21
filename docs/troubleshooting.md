@@ -20,6 +20,50 @@ sudo chmod 666 /dev/ttyACM0 /dev/ttyACM1
 
 Los nombres `ttyACM0`/`ttyACM1` los asigna el kernel en orden de detección. Si desconectas y reconectas, pueden cambiar. Solución: instalar las udev rules de este repo (`udev/99-so101.rules`) que crean symlinks estables por serial.
 
+## `lerobot-setup-motors` crashea a la mitad — pierdes progreso
+
+Síntoma típico:
+
+```
+'gripper' motor id set to 6
+Connect the controller board to the 'wrist_roll' motor only and press enter.
+'wrist_roll' motor id set to 5
+Connect the controller board to the 'wrist_flex' motor only and press enter.
+Traceback ...
+RuntimeError: Motor 'wrist_flex' (model 'sts3215') was not found.
+```
+
+El flujo nativo es "todo o nada": si crashea en el motor N, los N-1 motores ya configurados quedan con su ID asignado, pero el script no permite reanudar — tendrías que re-empezar desde gripper, y como gripper ya no tiene ID=1 sino ID=6, el flujo se confunde.
+
+**Solución:** usa los helpers `scripts/setup_one_motor.py` y `scripts/scan_bus.py` (sólo el motor que falta):
+
+```bash
+# 1. Verifica qué IDs ya están asignados
+python scripts/scan_bus.py leader
+
+# Salida esperada después de un crash a medias:
+#   ID  Esperado        Modelo
+#   ---  --------------  --------
+#     5  wrist_roll      777        ← ya asignado en intento anterior
+#     6  gripper         777
+# FALTANTES: [1, 2, 3, 4]            ← estos son los que faltan
+
+# 2. Setea solo el motor que falla (uno a la vez, sin re-empezar)
+python scripts/setup_one_motor.py leader wrist_flex
+python scripts/setup_one_motor.py leader elbow_flex
+# ... etc, hasta completar los faltantes
+
+# 3. Verifica
+python scripts/scan_bus.py leader
+# ✓ Todos los motores 1..6 están presentes.
+```
+
+**Causa del crash original (físico):** "Motor X not found" significa que `broadcast_ping` no recibió respuesta. Casi siempre es uno de:
+
+- **JST suelto:** el cable corto entre Waveshare y el motor no está bien encajado. Reasienta.
+- **Motor sin alimentación:** cuando aíslas un motor para asignarle ID, asegúrate de que la fuente de poder le sigue llegando (no solo data). En el SO-101 el power suele entrar por el primer motor; si solo dejas el motor objetivo + Waveshare sin power, no responde.
+- **Cable Waveshare → motor con jumper mal puesto:** debe estar en posición **B (USB)**.
+
 ## `lerobot-find-port` no detecta cambio
 
 Asegúrate de:
