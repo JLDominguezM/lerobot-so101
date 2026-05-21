@@ -47,7 +47,27 @@ fi
 # --- 4. uv sync --------------------------------------------------------------
 cd "${REPO_DIR}"
 echo "==> Resolviendo dependencias con uv sync"
-uv sync
+
+# Si la red no alcanza download.pytorch.org, LeRobot falla porque pinea
+# torch al index pytorch-cu128. Detectamos el timeout y aplicamos un patch
+# que cambia torch/torchvision a PyPI estándar.
+patch_lerobot_torch_source() {
+    local pyp="${LEROBOT_DIR}/pyproject.toml"
+    if grep -q '^torch = \[{ index = "pytorch-cu128"' "${pyp}"; then
+        echo "==> Aplicando patch: deshabilitando pin torch->pytorch-cu128 en LeRobot"
+        sed -i.bak \
+            -e 's|^torch = \[{ index = "pytorch-cu128"|# (patched, red bloquea pytorch.org)\n# torch = [{ index = "pytorch-cu128"|' \
+            -e 's|^torchvision = \[{ index = "pytorch-cu128"|# torchvision = [{ index = "pytorch-cu128"|' \
+            "${pyp}"
+    fi
+}
+
+if ! uv sync; then
+    echo "==> uv sync falló — probablemente la red no alcanza download.pytorch.org"
+    patch_lerobot_torch_source
+    echo "==> Reintentando uv sync"
+    uv sync
+fi
 
 # --- 5. Recordatorios manuales -----------------------------------------------
 cat <<EOF

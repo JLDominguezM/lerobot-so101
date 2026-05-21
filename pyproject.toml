@@ -20,6 +20,4 @@ dependencies = [
 lerobot = { path = "../lerobot", editable = true }
 
 [tool.uv]
-# Permite resolver el path source aunque el clone aún no exista al momento de lock.
-# Si esto da problemas, comentar y correr `uv sync` solo después de clonar lerobot.
 package = false
