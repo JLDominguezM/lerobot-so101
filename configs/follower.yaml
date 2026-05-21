@@ -1,0 +1,19 @@
+# Configuración del brazo SO-101 follower (el que ejecuta los movimientos).
+# Los scripts en scripts/ leen este archivo para construir los args de los
+# comandos `lerobot-*`.
+#
+# Hardware:
+#   - 6× motores Feetech STS3215 con reducción 1/345 en todos los joints
+#   - IDs (en orden de la cadena daisy-chain):
+#       1=shoulder_pan, 2=shoulder_lift, 3=elbow_flex,
+#       4=wrist_flex,   5=wrist_roll,    6=gripper
+
+type: so101_follower
+
+# Puerto serial. Si instalaste udev/99-so101.rules, usa el symlink estable.
+# Si no, descúbrelo con `bash scripts/00_find_ports.sh` y edítalo aquí.
+port: /dev/so101_follower
+
+# ID lógico que LeRobot usa para guardar/leer la calibración.
+# Cámbialo si tienes más de un follower en el mismo equipo.
+id: follower_principal

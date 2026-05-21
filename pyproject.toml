@@ -1,0 +1,25 @@
+[project]
+name = "so101"
+version = "0.1.0"
+description = "Setup y operación del brazo SO-101 (leader + follower) sobre LeRobot."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    # LeRobot con soporte Feetech (motores STS3215 del SO-101).
+    # La fuente real (path editable al clone hermano) se define en [tool.uv.sources].
+    "lerobot[feetech]",
+    # Utilidades del proyecto
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+]
+
+[tool.uv.sources]
+# Apunta al clone editable de huggingface/lerobot en el directorio hermano.
+# setup.sh hace `git clone https://github.com/huggingface/lerobot ../lerobot`.
+lerobot = { path = "../lerobot", editable = true }
+
+[tool.uv]
+# Permite resolver el path source aunque el clone aún no exista al momento de lock.
+# Si esto da problemas, comentar y correr `uv sync` solo después de clonar lerobot.
+package = false

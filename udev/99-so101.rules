@@ -1,0 +1,38 @@
+# udev rules para crear symlinks estables a los adaptadores USB-to-TTL Waveshare
+# de cada brazo SO-101. Resultado:
+#   /dev/so101_follower  → adaptador del follower
+#   /dev/so101_leader    → adaptador del leader
+#
+# ----------------------------------------------------------------------------
+# Cómo obtener el serial de TU adaptador:
+#
+#   1. Conecta UN solo adaptador (por ejemplo, el del follower).
+#   2. Identifica su tty:
+#         dmesg | tail | grep tty
+#         # o:  ls /dev/ttyACM*
+#   3. Lee los atributos del dispositivo:
+#         udevadm info -a -n /dev/ttyACM0 | grep -E 'ATTRS\{(serial|idVendor|idProduct)\}'
+#   4. Copia el ATTRS{serial} del padre con idVendor/idProduct del adaptador
+#      (típicamente Waveshare CH340 o CP2102 — el VID/PID dependen del modelo).
+#   5. Repite con el adaptador del leader.
+#
+# ----------------------------------------------------------------------------
+# Instalación:
+#
+#   sudo cp udev/99-so101.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger
+#   ls -l /dev/so101_*
+#
+# ----------------------------------------------------------------------------
+# Edita los placeholders SERIAL_FOLLOWER y SERIAL_LEADER abajo:
+
+SUBSYSTEM=="tty", ATTRS{serial}=="SERIAL_FOLLOWER", SYMLINK+="so101_follower", MODE="0666", GROUP="dialout"
+SUBSYSTEM=="tty", ATTRS{serial}=="SERIAL_LEADER",   SYMLINK+="so101_leader",   MODE="0666", GROUP="dialout"
+
+# Alternativa: si tus adaptadores NO exponen serial único (algunos clones CH340
+# no lo hacen), puedes diferenciarlos por el puerto USB físico al que están
+# conectados. Descomenta y ajusta KERNELS al path mostrado por udevadm:
+#
+# SUBSYSTEM=="tty", KERNELS=="1-2.1:1.0", SYMLINK+="so101_follower", MODE="0666", GROUP="dialout"
+# SUBSYSTEM=="tty", KERNELS=="1-2.2:1.0", SYMLINK+="so101_leader",   MODE="0666", GROUP="dialout"

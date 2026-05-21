@@ -1,0 +1,21 @@
+# Configuración del brazo SO-101 leader (la manija de teleoperación).
+# Los scripts en scripts/ leen este archivo para construir los args de los
+# comandos `lerobot-*`.
+#
+# Hardware:
+#   - 6× motores Feetech STS3215 con engranajes mixtos para que el brazo se
+#     mueva con poca fuerza pero soporte su propio peso:
+#       ID 1 (shoulder_pan):   1/191
+#       ID 2 (shoulder_lift):  1/345
+#       ID 3 (elbow_flex):     1/191
+#       ID 4 (wrist_flex):     1/147
+#       ID 5 (wrist_roll):     1/147
+#       ID 6 (gripper):        1/147
+
+type: so101_leader
+
+# Puerto serial (ver nota en follower.yaml).
+port: /dev/so101_leader
+
+# ID lógico para la calibración.
+id: leader_principal
