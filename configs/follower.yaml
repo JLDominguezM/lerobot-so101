@@ -12,8 +12,11 @@ type: so101_follower
 
 # Puerto serial. Si instalaste udev/99-so101.rules, usa el symlink estable.
 # Si no, descúbrelo con `bash scripts/00_find_ports.sh` y edítalo aquí.
-port: /dev/so101_follower
+port: /dev/tty.usbmodem5B141149291
 
 # ID lógico que LeRobot usa para guardar/leer la calibración.
-# Cámbialo si tienes más de un follower en el mismo equipo.
-id: follower_principal
+# "papu" es el sobrenombre del follower en el lab (heredado de htovarm7/so101_ws).
+# La calibración correspondiente está versionada en calibrations/papu.json y
+# se enlaza a ~/.cache/huggingface/lerobot/calibration/so101_follower/ con
+# `bash scripts/install_calibrations.sh`.
+id: papu

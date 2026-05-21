@@ -15,7 +15,7 @@
 type: so101_leader
 
 # Puerto serial (ver nota en follower.yaml).
-port: /dev/so101_leader
+port: /dev/tty.usbmodem5B140290911
 
 # ID lógico para la calibración.
 id: leader_principal
