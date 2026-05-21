@@ -51,8 +51,7 @@ def main() -> None:
     bus._connect(handshake=False)
 
     print(f"Escaneando bus en {port}...")
-    ids_models = bus.broadcast_ping()
-    bus.disconnect()
+    ids_models = bus.broadcast_ping() or {}
 
     if not ids_models:
         print("Nada en el bus. Verifica:")
@@ -79,6 +78,11 @@ def main() -> None:
         print(f"\nINESPERADOS (responden pero no esperados): {sorted(extra)}")
     if not missing and not extra:
         print("\n✓ Todos los motores 1..6 están presentes.")
+
+    try:
+        bus.disconnect()
+    except Exception as e:
+        print(f"\n(aviso: disconnect falló — esperado si faltan motores: {e})")
 
 
 if __name__ == "__main__":
