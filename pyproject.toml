@@ -1,5 +1,5 @@
 [project]
-name = "so101"
+name = "cal"
 version = "0.1.0"
 description = "Setup y operación del brazo SO-101 (leader + follower) sobre LeRobot."
 readme = "README.md"
@@ -12,12 +12,13 @@ dependencies = [
     # Utilidades del proyecto
     "pyyaml>=6.0",
     "python-dotenv>=1.0",
+    "rerun-sdk>=0.20",
+    "depthai>=3.6.1",
 ]
 
 [tool.uv.sources]
-# Apunta al clone editable de huggingface/lerobot en el directorio hermano.
-# setup.sh hace `git clone https://github.com/huggingface/lerobot ../lerobot`.
-lerobot = { path = "../lerobot", editable = true }
+# Apunta al clone editable de huggingface/lerobot anidado en este repo.
+lerobot = { path = "./lerobot", editable = true }
 
 [tool.uv]
 package = false
