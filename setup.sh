@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
 # Bootstrap del repo so101:
 #   1. Verifica que uv esté instalado.
-#   2. Asegura Python 3.12 (uv lo instala si falta).
-#   3. Clona huggingface/lerobot como hermano (../lerobot) si no existe.
+#   2. Asegura Python 3.12 (uv lo gestiona).
+#   3. Clona huggingface/lerobot en ./lerobot/ si no existe.
 #   4. Crea el venv y resuelve dependencias con uv sync.
 #   5. Recuerda configurar permisos de USB y udev rules.
 
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKSPACE_DIR="$(cd "${REPO_DIR}/.." && pwd)"
-LEROBOT_DIR="${WORKSPACE_DIR}/lerobot"
+LEROBOT_DIR="${REPO_DIR}/lerobot"
 
 echo "==> Repo so101:    ${REPO_DIR}"
-echo "==> Workspace:     ${WORKSPACE_DIR}"
 echo "==> LeRobot clone: ${LEROBOT_DIR}"
 echo
 

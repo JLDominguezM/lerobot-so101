@@ -5,6 +5,10 @@ from __future__ import annotations
 import argparse
 import sys
 
+from .delete_batch import add_delete_batch_parser
+from .eval import add_eval_parser
+from .push_dataset import add_push_dataset_parser
+from .eval_viz import add_eval_viz_parser
 from .follower import add_move_parser, add_replay_parser
 from .leader import add_record_trajectory_parser, add_record_waypoint_parser
 from .record_dataset import add_record_batch_parser, add_record_dataset_parser
@@ -17,7 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="CLI propio del SO-101: move, tune, record (leader) y replay (follower).",
     )
     top = parser.add_subparsers(dest="device", required=True,
-                                metavar="{follower,leader,teleop,record-dataset}")
+                                metavar="{follower,leader,teleop,record-dataset,eval,eval-viz}")
 
     # follower ...
     follower = top.add_parser("follower", help="Comandos del brazo follower (ejecuta movimientos).")
@@ -40,6 +44,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     # record-batch (top-level: sesión estructurada negro/verde/rojo en batches de 3)
     add_record_batch_parser(top)
+
+    # eval (top-level: corre una policy entrenada en el robot)
+    add_eval_parser(top)
+
+    # eval-viz (top-level: igual que eval pero con heatmap de activaciones en rerun)
+    add_eval_viz_parser(top)
+
+    # delete-batch (top-level: borra los 3 episodios de un batch del dataset)
+    add_delete_batch_parser(top)
+
+    # push-dataset (top-level: sube el dataset local a HF Hub)
+    add_push_dataset_parser(top)
 
     return parser
 

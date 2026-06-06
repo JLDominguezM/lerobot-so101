@@ -14,6 +14,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "rerun-sdk>=0.20",
     "depthai>=3.6.1",
+    "lerobot-attention-visualizer>=0.1.2",
 ]
 
 [tool.uv.sources]

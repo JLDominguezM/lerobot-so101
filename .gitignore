@@ -1,3 +1,6 @@
+# LeRobot vendored clone (editable dependency, not tracked)
+lerobot/
+
 # Python / uv
 .venv/
 __pycache__/
@@ -29,3 +32,5 @@ Thumbs.db
 
 # logs
 *.log
+
+.cache/

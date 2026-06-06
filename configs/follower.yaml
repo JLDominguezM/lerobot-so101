@@ -13,6 +13,7 @@ type: so101_follower
 # Puerto serial. Si instalaste udev/99-so101.rules, usa el symlink estable.
 # Si no, descúbrelo con `bash scripts/00_find_ports.sh` y edítalo aquí.
 port: /dev/tty.usbmodem5B141149291
+# port: /dev/tty.usbmodem5B3D0447521
 
 # ID lógico que LeRobot usa para guardar/leer la calibración.
 # "papu" es el sobrenombre del follower en el lab (heredado de htovarm7/so101_ws).
