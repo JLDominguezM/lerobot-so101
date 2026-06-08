@@ -560,7 +560,9 @@ def cmd_record_batch(args: argparse.Namespace) -> int:
         print("\nSubiendo dataset a HF Hub...")
         push_cmd = [
             sys.executable, "-c",
-            f"from lerobot.common.datasets.lerobot_dataset import LeRobotDataset; "
+            # OJO: el módulo es lerobot.datasets (la ruta vieja lerobot.common.datasets
+            # ya no existe en LeRobot v3.x y rompía el push al final de la sesión).
+            f"from lerobot.datasets.lerobot_dataset import LeRobotDataset; "
             f"ds = LeRobotDataset('{args.repo_id}', root='{root}'); "
             f"ds.push_to_hub()"
         ]

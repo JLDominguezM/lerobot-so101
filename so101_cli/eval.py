@@ -71,6 +71,12 @@ def add_eval_parser(sub: argparse._SubParsersAction) -> None:
                    help="Subir el dataset de eval a HF Hub al terminar (requiere --record).")
     p.add_argument("--device", default="mps",
                    help="Dispositivo torch para inferencia: mps (Mac, default), cpu, cuda.")
+    p.add_argument("--online", action="store_true",
+                   help="Permite peticiones a HF Hub. Por defecto eval corre OFFLINE "
+                        "(HF_HUB_OFFLINE=1): usa solo el cache local, sin red. Evita el "
+                        "crash por DNS cuando el robot no tiene internet. Usa --online "
+                        "para forzar descarga (o si el modelo no está cacheado todavía). "
+                        "Se activa solo automáticamente con --push.")
     p.add_argument(
         "--n-action-steps", type=int, default=None,
         help="Cuántas acciones del chunk ejecutar antes de re-observar (override del "
@@ -162,6 +168,11 @@ def cmd_eval(args: argparse.Namespace) -> int:
         print(f"  repo_id  : {repo_id}  (push={'sí' if args.push else 'no'})")
         print(f"  root     : {root}  (resume={'sí' if already_exists else 'no'})")
     print(f"  device   : {args.device}")
+    # Offline por defecto: el modelo ya debe estar cacheado para correr en el
+    # robot. Evita el crash por HEAD a HF Hub cuando no hay internet (Errno 8).
+    # --push necesita red, así que ahí forzamos online.
+    offline = not args.online and not args.push
+    print(f"  red      : {'OFFLINE (solo cache)' if offline else 'online (permite descargas)'}")
     if args.n_action_steps is not None:
         print(f"  n_action_steps : {args.n_action_steps}  (override; checkpoint=50)")
     if args.num_steps is not None:
@@ -177,4 +188,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
         return 0
 
     env = os.environ.copy()
+    if offline:
+        env["HF_HUB_OFFLINE"] = "1"
+        env["TRANSFORMERS_OFFLINE"] = "1"
     return subprocess.call(cmd, env=env)

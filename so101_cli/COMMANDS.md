@@ -103,7 +103,11 @@ Flags opcionales:
 | `--no-front` | off | No abrir la cámara RealSense (front) |
 | `--external-index N` | auto | Forzar índice AVFoundation para la RealSense |
 
-Teclas: `q` o `Ctrl-C` para salir
+Teclas:
+- `espacio` — pausa/reanuda. En pausa el follower **mantiene la pose** (torque activo, re-afirma el último goal); el leader queda libre para moverlo sin que el follower lo copie. Al reanudar, el follower vuelve **suavemente** a la pose actual del leader (ramp de ~0.6 s) para no saltar de golpe.
+- `q` o `Ctrl-C` — salir
+
+> En pausa no se graban muestras (si usas `--record`): así repositionas el leader sin meter esos frames al .json. Esto deja un hueco temporal en la trayectoria grabada, que en replay se ve como una pausa.
 
 ---
 
@@ -202,15 +206,18 @@ Flags opcionales:
 | `--duration N` | 60 s | Segundos máximos por rollout |
 | `--fps N` | 30 | FPS del loop de control |
 | `--device STR` | `mps` | Dispositivo torch (`mps` en Mac, `cpu`, `cuda`) |
+| `--online` | off (corre OFFLINE) | Permite peticiones a HF Hub. Ver nota abajo. |
 | `--n-action-steps N` | (checkpoint=50) | Acciones del chunk a ejecutar antes de re-observar. Bajarlo (≈15) hace al robot más reactivo y le deja corregir el pick en vez de comprometerse al centro. No reentrena. |
 | `--num-steps N` | (checkpoint=10) | Pasos de integración del flow-matching (solo SmolVLA). Subirlo (≈20) da acciones más nítidas. No reentrena. |
 | `--no-lateral` | off | No usar la cámara OAK-D (lateral) |
 | `--record` | off | Grabar rollouts al dataset local (estrategia sentry) |
 | `--repo-id ID` | `<HF_USER>/eval_act_terminal_sort` | Dataset de log (solo con `--record`) |
-| `--push` | off | Subir dataset a HF Hub al terminar (requiere `--record`) |
+| `--push` | off | Subir dataset a HF Hub al terminar (requiere `--record`); fuerza `--online` |
 | `--dry-run` | off | Solo mostrar el comando generado |
 
 > **Nota:** `--n-action-steps` y `--num-steps` son overrides del config del checkpoint que se aplican en inferencia (sin reentrenar). Bajar `n_action_steps` aumenta el cómputo (más forward passes); si el brazo no aguanta el FPS, súbelo o baja `--fps`.
+
+> **OFFLINE por defecto:** `eval` corre con `HF_HUB_OFFLINE=1`/`TRANSFORMERS_OFFLINE=1` para no tocar la red — así no crashea por DNS cuando el robot no tiene internet (`OSError: Can't load processor ...` / `Errno 8`). El modelo y el processor base de SmolVLA (`HuggingFaceTB/SmolVLM2-500M-Video-Instruct`) ya deben estar en el cache. Si entrenaste un checkpoint nuevo o aún no está cacheado, primero (con internet): `./cal pull model` y `./cal eval --color red --online` una vez para bajar lo que falte; después ya corre offline solo.
 
 ---
 
@@ -234,6 +241,10 @@ Mover datos y entrenar. El flujo típico es: grabas en la Mac → `push dataset`
 ./cal train --type act              # entrena ACT (sin language conditioning)
 ./cal train --device mps            # forzar Mac (LENTO para SmolVLA)
 ./cal train --dry-run               # muestra el comando lerobot-train, no ejecuta
+
+# Fine-tuning: continuar desde un checkpoint en vez de entrenar desde cero
+./cal train --finetune <HF_USER>/smolvla_terminal_sort \
+            --dataset so101_terminal_sort_ext --steps 20000
 ```
 
 **`./cal train`** (default) entrena `<HF_USER>/smolvla_terminal_sort` — el mismo repo que `eval` usa por defecto, así que después de entrenar puedes hacer `./cal eval --color red` directo.
@@ -246,8 +257,11 @@ Flags de `train`:
 | `--policy NAME` | `smolvla_terminal_sort` / `act_terminal_sort` | Nombre del repo de salida (coincide con eval) |
 | `--type {smolvla,act}` | `smolvla` | Tipo de policy. SmolVLA añade `load_vlm_weights=true` automáticamente |
 | `--device STR` | `cuda` | `cuda` (Spark), `mps` (Mac, lento), `cpu` |
-| `--steps N` | (config) | Pasos de entrenamiento |
+| `--steps N` | (config) | Pasos de entrenamiento (fine-tune: ~15000-25000 basta) |
+| `--finetune CHECKPOINT` | off | Continúa desde un checkpoint (HF repo_id o carpeta). Se pasa como `--policy.path`; ignora `--type`/`load_vlm_weights` (los hereda). Sin `--policy`, la salida se nombra `<base>_ft` para no pisar el base |
 | `--dry-run` | off | Solo mostrar el comando |
+
+**Fine-tuning** (p.ej. tras cambiar el gripper): graba pocas demos nuevas a un dataset **fresco** (`record-batch --repo-id <HF_USER>/so101_terminal_sort_ext --push`) y reancla la policy partiendo del checkpoint actual en vez de re-entrenar desde cero. Es mucho más rápido y conserva las skills (color/place) que ya sabe. **No grabes sobre el dataset viejo** (`record-batch` por defecto apunta a `armando/so101_terminal_sort`): mezclaría demos del gripper viejo con el nuevo.
 
 Flags de `push dataset` (mismos que el viejo `push-dataset`): `--hf-repo-id`, `--local-repo-id`, `--root`, `--private`, `--no-large`, `--dry-run`.
 
@@ -331,6 +345,7 @@ Flags opcionales:
 | `--fps N` | 15 | FPS del loop (más bajo = más margen CPU) |
 | `--no-lateral` | off | No usar la cámara OAK-D |
 | `--device STR` | `cpu` | Dispositivo torch (`cpu`, `mps`, `cuda`) |
+| `--online` | off (corre OFFLINE) | Permite peticiones a HF Hub. Por defecto offline (solo cache), igual que `eval`. |
 | `--n-action-steps N` | (checkpoint=50) | Acciones del chunk antes de re-observar. Bajarlo = más reactivo. No reentrena. |
 | `--num-steps N` | (checkpoint=10) | Pasos de flow-matching (solo SmolVLA). Subirlo = acciones más nítidas. No reentrena. |
 

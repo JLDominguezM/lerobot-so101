@@ -79,10 +79,22 @@ def add_eval_viz_parser(sub: argparse._SubParsersAction) -> None:
         help="Override de pasos de integración del flow-matching (solo SmolVLA; "
              "el checkpoint trae 10). Subirlo da acciones más nítidas. No reentrena.",
     )
+    p.add_argument("--online", action="store_true",
+                   help="Permite peticiones a HF Hub. Por defecto corre OFFLINE "
+                        "(solo cache local) para evitar el crash por DNS sin internet.")
     p.set_defaults(func=cmd_eval_viz)
 
 
 def cmd_eval_viz(args: argparse.Namespace) -> int:
+    import os
+
+    # Offline por defecto: hay que setear las env vars ANTES de importar
+    # huggingface_hub / transformers (las leen al importarse). Evita el crash
+    # por HEAD a HF Hub cuando el robot no tiene internet (Errno 8).
+    if not args.online:
+        os.environ.setdefault("HF_HUB_OFFLINE", "1")
+        os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
     import json
 
     import torch
@@ -134,6 +146,7 @@ def cmd_eval_viz(args: argparse.Namespace) -> int:
     print(f"  task    : {task!r}")
     print(f"  policy  : {args.policy}  (type={policy_type})")
     print(f"  device  : {device}")
+    print(f"  red     : {'online (permite descargas)' if args.online else 'OFFLINE (solo cache)'}")
     print(f"  viz     : {'heatmap ResNet' if is_act else 'solo cámaras (SmolVLA: heatmap ResNet no aplica)'}")
     print(f"  fps     : {args.fps}  ({args.n} episodio(s) × {args.duration}s)")
     print(f"  cámaras : front" + ("" if args.no_lateral else " + lateral"))

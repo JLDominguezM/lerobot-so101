@@ -26,6 +26,7 @@ bash scripts/03_teleoperate.sh [--display_data=true]         # raw lerobot-teleo
 bash scripts/05_record.sh "<task>" <num_ep> <dataset_name>   # record demos → HF Hub
 bash scripts/06_replay.sh <dataset_name> <ep_idx>            # replay episode on follower
 bash scripts/07_train_act.sh <dataset_name> [policy_name]    # train ACT (needs CUDA)
+bash scripts/09_train_smolvla.sh <dataset_name> [policy_name] # train SmolVLA (task-conditioned VLM; CUDA, or --policy.device=mps on Mac)
 bash scripts/08_eval.sh <policy_name> "<task>" [num_ep]      # roll out policy on robot
 bash scripts/install_calibrations.sh                         # symlink calibrations/*.json → ~/.cache/huggingface/lerobot/calibration/
 python scripts/scan_bus.py follower|leader                   # ping motor IDs 1..6; useful after partial setup_motors crash
