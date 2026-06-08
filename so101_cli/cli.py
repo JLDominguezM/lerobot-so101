@@ -5,14 +5,16 @@ from __future__ import annotations
 import argparse
 import sys
 
+from .dataset_stats import add_dataset_stats_parser
 from .delete_batch import add_delete_batch_parser
 from .eval import add_eval_parser
-from .push_dataset import add_push_dataset_parser
 from .eval_viz import add_eval_viz_parser
 from .follower import add_move_parser, add_replay_parser
 from .leader import add_record_trajectory_parser, add_record_waypoint_parser
 from .record_dataset import add_record_batch_parser, add_record_dataset_parser
 from .teleop import add_teleop_parser
+from .train import add_train_parser
+from .transfer import add_pull_parser, add_push_parser
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -54,8 +56,15 @@ def build_parser() -> argparse.ArgumentParser:
     # delete-batch (top-level: borra los 3 episodios de un batch del dataset)
     add_delete_batch_parser(top)
 
-    # push-dataset (top-level: sube el dataset local a HF Hub)
-    add_push_dataset_parser(top)
+    # push / pull (top-level: mueve dataset o modelo a/desde HF Hub)
+    add_push_parser(top)
+    add_pull_parser(top)
+
+    # train (top-level: entrena SmolVLA/ACT envolviendo lerobot-train)
+    add_train_parser(top)
+
+    # dataset-stats (top-level: balance de episodios/frames por color)
+    add_dataset_stats_parser(top)
 
     return parser
 

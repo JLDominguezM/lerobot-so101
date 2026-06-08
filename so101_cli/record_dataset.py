@@ -159,8 +159,15 @@ def _build_lerobot_cmd(
     reset_time: float,
     resume: bool,
     display_data: bool = True,
+    play_sounds: bool = False,
 ) -> list[str]:
-    """Construye el comando lerobot-record para UN episodio (--n 1)."""
+    """Construye el comando lerobot-record para UN episodio (--n 1).
+
+    play_sounds=False (default) evita el TTS bloqueante de lerobot: el `finally`
+    de cada episodio llama `log_say("Stop recording", blocking=True)`, que en
+    macOS ejecuta `say` de forma síncrona y espera a que termine de hablar antes
+    de continuar. Apagarlo acelera notablemente el corte entre episodios.
+    """
     return [
         sys.executable, "-m", "so101_cli._record_entry",
         f"--robot.type={follower['type']}",
@@ -180,6 +187,7 @@ def _build_lerobot_cmd(
         "--dataset.push_to_hub=false",
         f"--resume={'true' if resume else 'false'}",
         f"--display_data={'true' if display_data else 'false'}",
+        f"--play_sounds={'true' if play_sounds else 'false'}",
     ]
 
 
@@ -376,6 +384,10 @@ def add_record_batch_parser(sub: argparse._SubParsersAction) -> None:
                    help="MxId de una OAK-D concreta si hay varias conectadas.")
     p.add_argument("--push", action="store_true",
                    help="Subir el dataset a HF Hub al terminar la sesión completa.")
+    p.add_argument("--sounds", action="store_true",
+                   help="Reactiva el TTS de lerobot ('Stop recording', etc.). Por defecto "
+                        "está APAGADO porque el 'Stop recording' es bloqueante (espera a que "
+                        "el sistema termine de hablar) y alentiza el corte entre episodios.")
     p.add_argument("--dry-run", action="store_true",
                    help="Muestra el plan de batches y el primer comando; no ejecuta nada.")
     p.set_defaults(func=cmd_record_batch)
@@ -441,7 +453,7 @@ def cmd_record_batch(args: argparse.Namespace) -> int:
         first_cmd = _build_lerobot_cmd(
             follower, leader, cameras, args.repo_id, root,
             first_task, args.fps, args.episode_time, reset_time=5,
-            resume=False, display_data=False,
+            resume=False, display_data=False, play_sounds=args.sounds,
         )
         print("\n--- Primer comando (ejemplo) ---")
         print("  " + " \\\n    ".join(first_cmd))
@@ -508,6 +520,7 @@ def cmd_record_batch(args: argparse.Namespace) -> int:
                 reset_time=5,
                 resume=(not is_first_ever),
                 display_data=False,
+                play_sounds=args.sounds,
             )
 
             try:

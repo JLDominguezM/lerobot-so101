@@ -44,7 +44,10 @@ python scripts/setup_one_motor.py follower|leader <name>     # configure a singl
 ./cal eval --color red|green|black [--n N] [--record]        # run trained policy on follower (no leader needed)
 ./cal eval-viz --color red|green|black [--fps 15]            # same as eval + rerun ResNet-18 activation heatmap
 ./cal delete-batch N [--dry-run]                             # delete 3 episodes of batch N (1-indexed) from local dataset
-./cal push-dataset [--hf-repo-id ID] [--dry-run]             # upload local dataset to HF Hub
+./cal push dataset|model [...]                               # upload dataset or trained checkpoint to HF Hub
+./cal pull dataset|model [--repo-id ID]                      # download dataset (→ lerobot cache) or model (→ hub cache)
+./cal train [--type smolvla|act] [--device cuda]             # wrap lerobot-train; default → <HF_USER>/smolvla_terminal_sort
+./cal dataset-stats [--repo-id ID]                           # episodes/frames balance per color (pre-train sanity check)
 ```
 
 Full flag reference for all `cal` subcommands: `so101_cli/COMMANDS.md`.

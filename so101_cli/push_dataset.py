@@ -46,17 +46,17 @@ def _find_root(hf_repo_id: str, local_repo_id: str, explicit_root: Path | None) 
     return None
 
 
-def add_push_dataset_parser(sub: argparse._SubParsersAction) -> None:
+def add_push_dataset_parser(sub: argparse._SubParsersAction, name: str = "push-dataset") -> None:
     p = sub.add_parser(
-        "push-dataset",
+        name,
         help="Sube el dataset local a HuggingFace Hub.",
         description=(
             "Sube el dataset grabado con record-batch a HF Hub.\n"
             "El repo local y el repo de HF pueden tener nombres distintos.\n\n"
             "Ejemplos:\n"
-            "  ./cal push-dataset\n"
-            "  ./cal push-dataset --hf-repo-id armandomm09/so101_terminal_sort\n"
-            "  ./cal push-dataset --dry-run\n"
+            "  ./cal push dataset\n"
+            "  ./cal push dataset --hf-repo-id armandomm09/so101_terminal_sort\n"
+            "  ./cal push dataset --dry-run\n"
         ),
     )
     p.add_argument(
@@ -72,6 +72,11 @@ def add_push_dataset_parser(sub: argparse._SubParsersAction) -> None:
                    help="Ruta local del dataset. Si omites se busca automáticamente.")
     p.add_argument("--private", action="store_true",
                    help="Subir como repositorio privado.")
+    p.add_argument("--no-large", action="store_true",
+                   help="Usa upload_folder clásico en vez de upload_large_folder. "
+                        "Por defecto se usa upload_large_folder: sube en paralelo y "
+                        "SE REANUDA si se corta (necesario para datasets grandes; el "
+                        "upload_folder normal se atora con muchos archivos/GB).")
     p.add_argument("--dry-run", action="store_true",
                    help="Muestra info del dataset sin subir nada.")
     p.set_defaults(func=cmd_push_dataset)
@@ -119,7 +124,12 @@ def cmd_push_dataset(args: argparse.Namespace) -> int:
     ds.repo_id = hf_repo_id
     ds.meta.repo_id = hf_repo_id
 
+    use_large = not args.no_large
+    metodo    = "upload_large_folder (paralelo, reanudable)" if use_large else "upload_folder (clásico)"
     print(f"Subiendo a https://huggingface.co/datasets/{hf_repo_id} ...")
-    ds.push_to_hub(private=args.private)
+    print(f"  método: {metodo}")
+    if use_large:
+        print(f"  (si se corta, vuelve a correr el mismo comando y continúa donde quedó)")
+    ds.push_to_hub(private=args.private, upload_large_folder=use_large)
     print("¡Listo!")
     return 0

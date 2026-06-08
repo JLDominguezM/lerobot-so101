@@ -69,6 +69,21 @@ def add_eval_parser(sub: argparse._SubParsersAction) -> None:
     )
     p.add_argument("--push", action="store_true",
                    help="Subir el dataset de eval a HF Hub al terminar (requiere --record).")
+    p.add_argument("--device", default="mps",
+                   help="Dispositivo torch para inferencia: mps (Mac, default), cpu, cuda.")
+    p.add_argument(
+        "--n-action-steps", type=int, default=None,
+        help="Cuántas acciones del chunk ejecutar antes de re-observar (override del "
+             "checkpoint, que trae 50). Bajarlo (p.ej. 15) hace al robot más reactivo: "
+             "vuelve a mirar las cámaras más seguido y puede corregir el pick en vez de "
+             "comprometerse a una trayectoria al centro. No requiere reentrenar.",
+    )
+    p.add_argument(
+        "--num-steps", type=int, default=None,
+        help="Pasos de integración del flow-matching en inferencia (override del "
+             "checkpoint, que trae 10). Subirlo (p.ej. 20) produce acciones más nítidas "
+             "y menos promediadas. No requiere reentrenar.",
+    )
     p.add_argument("--dry-run", action="store_true",
                    help="Muestra el comando que se ejecutaría, sin correrlo.")
     p.set_defaults(func=cmd_eval)
@@ -109,6 +124,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
         sys.executable, "-m", "so101_cli._rollout_entry",
         f"--strategy.type={strategy}",
         f"--policy.path={args.policy}",
+        f"--policy.device={args.device}",
         f"--robot.type={follower['type']}",
         f"--robot.port={follower['port']}",
         f"--robot.id={follower['id']}",
@@ -117,6 +133,13 @@ def cmd_eval(args: argparse.Namespace) -> int:
         f"--duration={args.duration}",
         f"--fps={args.fps}",
     ]
+
+    # Overrides opcionales del config del checkpoint (draccus los aplica encima
+    # de lo que trae el modelo, ver rollout/configs.py::_load_policy_config).
+    if args.n_action_steps is not None:
+        cmd.append(f"--policy.n_action_steps={args.n_action_steps}")
+    if args.num_steps is not None:
+        cmd.append(f"--policy.num_steps={args.num_steps}")
 
     if strategy == "sentry":
         cmd += [
@@ -138,6 +161,11 @@ def cmd_eval(args: argparse.Namespace) -> int:
     if strategy == "sentry":
         print(f"  repo_id  : {repo_id}  (push={'sí' if args.push else 'no'})")
         print(f"  root     : {root}  (resume={'sí' if already_exists else 'no'})")
+    print(f"  device   : {args.device}")
+    if args.n_action_steps is not None:
+        print(f"  n_action_steps : {args.n_action_steps}  (override; checkpoint=50)")
+    if args.num_steps is not None:
+        print(f"  num_steps      : {args.num_steps}  (override; checkpoint=10)")
     print(f"  front    : opencv idx={args.front_index}  640x480 @ {args.fps}fps")
     print(f"  lateral  : {'(desactivada)' if args.no_lateral else 'depthai (OAK-D)  640x480'}")
     print()

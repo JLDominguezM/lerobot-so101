@@ -176,6 +176,7 @@ Flags opcionales:
 | `--no-lateral` | off | No grabar la cámara lateral (OAK-D) |
 | `--front-index N` | 0 | Índice OpenCV de la cámara front |
 | `--push` | off | Subir a HF Hub al terminar |
+| `--sounds` | off | Reactiva el TTS de lerobot. Por defecto APAGADO: el `"Stop recording"` de lerobot es **bloqueante** (espera a que macOS termine de decirlo en voz alta), lo que alentiza el corte entre episodios. |
 | `--dry-run` | off | Mostrar plan + primer comando, sin ejecutar |
 
 ---
@@ -185,46 +186,97 @@ Flags opcionales:
 Corre la policy entrenada en el robot real. **No necesita el brazo leader conectado.**
 
 ```bash
-./cal eval --color red               # 1 rollout del cable rojo (sin grabar)
-./cal eval --color black --n 3       # 3 rollouts del cable negro
-./cal eval --color green --record    # corre + graba rollouts a dataset local
-./cal eval --color red --dry-run     # muestra el comando, no ejecuta
+./cal eval --color red                      # 1 rollout del cable rojo (sin grabar)
+./cal eval --color black --n 3              # 3 rollouts del cable negro
+./cal eval --color green --record          # corre + graba rollouts a dataset local
+./cal eval --color red --n-action-steps 15 # más reactivo: re-observa más seguido
+./cal eval --color red --dry-run           # muestra el comando, no ejecuta
 ```
 
 Flags opcionales:
 
 | Flag | Default | Descripción |
 |------|---------|-------------|
-| `--policy ID` | `armandomm09/act_terminal_sort` | HF repo_id de la policy |
+| `--policy ID` | `armandomm09/smolvla_terminal_sort` | HF repo_id de la policy |
 | `--n N` | 1 | Número de rollouts |
 | `--duration N` | 60 s | Segundos máximos por rollout |
 | `--fps N` | 30 | FPS del loop de control |
+| `--device STR` | `mps` | Dispositivo torch (`mps` en Mac, `cpu`, `cuda`) |
+| `--n-action-steps N` | (checkpoint=50) | Acciones del chunk a ejecutar antes de re-observar. Bajarlo (≈15) hace al robot más reactivo y le deja corregir el pick en vez de comprometerse al centro. No reentrena. |
+| `--num-steps N` | (checkpoint=10) | Pasos de integración del flow-matching (solo SmolVLA). Subirlo (≈20) da acciones más nítidas. No reentrena. |
 | `--no-lateral` | off | No usar la cámara OAK-D (lateral) |
 | `--record` | off | Grabar rollouts al dataset local (estrategia sentry) |
 | `--repo-id ID` | `<HF_USER>/eval_act_terminal_sort` | Dataset de log (solo con `--record`) |
 | `--push` | off | Subir dataset a HF Hub al terminar (requiere `--record`) |
 | `--dry-run` | off | Solo mostrar el comando generado |
 
+> **Nota:** `--n-action-steps` y `--num-steps` son overrides del config del checkpoint que se aplican en inferencia (sin reentrenar). Bajar `n_action_steps` aumenta el cómputo (más forward passes); si el brazo no aguanta el FPS, súbelo o baja `--fps`.
+
 ---
 
-## push-dataset
+## push / pull / train  ← flujo Mac ↔ Spark
 
-Sube el dataset local a HuggingFace Hub.
+Mover datos y entrenar. El flujo típico es: grabas en la Mac → `push dataset` → en el Spark `pull dataset` + `train` → vuelves a la Mac → `eval` (que baja el modelo solo).
 
 ```bash
-./cal push-dataset                           # sube armando/so101_terminal_sort
-./cal push-dataset --repo-id armando/mi_ds   # repo_id explícito
-./cal push-dataset --dry-run                 # muestra info sin subir nada
-./cal push-dataset --private                 # sube como repositorio privado
+# Subir / bajar el DATASET
+./cal push dataset                  # sube el dataset local grabado con record-batch
+./cal push dataset --dry-run        # muestra info sin subir nada
+./cal pull dataset                  # baja el dataset al cache local
+
+# Subir / bajar el MODELO (train ya sube solo; eval ya baja solo — esto es manual)
+./cal push model                    # sube outputs/train/<policy>/checkpoints/last/pretrained_model
+./cal push model --path <carpeta>   # sube un checkpoint específico
+./cal pull model                    # baja el checkpoint al cache de HF
+
+# Entrenar
+./cal train                         # SmolVLA sobre <HF_USER>/so101_terminal_sort, device cuda
+./cal train --type act              # entrena ACT (sin language conditioning)
+./cal train --device mps            # forzar Mac (LENTO para SmolVLA)
+./cal train --dry-run               # muestra el comando lerobot-train, no ejecuta
 ```
+
+**`./cal train`** (default) entrena `<HF_USER>/smolvla_terminal_sort` — el mismo repo que `eval` usa por defecto, así que después de entrenar puedes hacer `./cal eval --color red` directo.
+
+Flags de `train`:
+
+| Flag | Default | Descripción |
+|------|---------|-------------|
+| `--dataset NAME` | `so101_terminal_sort` | Dataset (sin user): se usa `<HF_USER>/<dataset>` |
+| `--policy NAME` | `smolvla_terminal_sort` / `act_terminal_sort` | Nombre del repo de salida (coincide con eval) |
+| `--type {smolvla,act}` | `smolvla` | Tipo de policy. SmolVLA añade `load_vlm_weights=true` automáticamente |
+| `--device STR` | `cuda` | `cuda` (Spark), `mps` (Mac, lento), `cpu` |
+| `--steps N` | (config) | Pasos de entrenamiento |
+| `--dry-run` | off | Solo mostrar el comando |
+
+Flags de `push dataset` (mismos que el viejo `push-dataset`): `--hf-repo-id`, `--local-repo-id`, `--root`, `--private`, `--no-large`, `--dry-run`.
+
+> **Datasets grandes:** `push dataset` usa `upload_large_folder` por defecto — sube en paralelo y **se reanuda** si se corta (vuelve a correr el mismo comando y continúa). El `upload_folder` clásico se atora con muchos GB/archivos; úsalo solo con `--no-large` si lo necesitas.
+Flags de `push model`: `--path`, `--repo-id`, `--policy`, `--private`, `--dry-run`.
+Flags de `pull dataset` / `pull model`: `--repo-id`.
+
+---
+
+## dataset-stats
+
+Muestra el balance del dataset local: episodios y frames por color/tarea. Úsalo **antes de gastar una noche de entrenamiento** para confirmar que cada color está parejo.
+
+```bash
+./cal dataset-stats                                  # balance de armando/so101_terminal_sort
+./cal dataset-stats --repo-id armando/mi_dataset     # otro dataset
+./cal dataset-stats --root /ruta/al/dataset          # ruta explícita
+```
+
+Salida: tabla con episodios/frames/segundos por color, una barra de reparto, y un veredicto (✓ balanceado / ⚠ desbalanceado con cuántos episodios faltan para emparejar).
 
 Flags opcionales:
 
 | Flag | Default | Descripción |
 |------|---------|-------------|
-| `--repo-id ID` | `armando/so101_terminal_sort` | Dataset a subir |
-| `--private` | off | Subir como repo privado en HF Hub |
-| `--dry-run` | off | Muestra info del dataset sin subir nada |
+| `--repo-id ID` | `armando/so101_terminal_sort` | Dataset local a inspeccionar |
+| `--root PATH` | (deriva de `--repo-id`) | Ruta local exacta del dataset |
+
+> **Nota:** la posición de la terminal **no** se graba en el dataset (solo el color va en el task string), así que el balance por terminal no se puede calcular aquí — eso depende de tu protocolo de grabación (`record-batch` pide poner los cables en terminales distintas entre batches).
 
 ---
 
@@ -254,31 +306,35 @@ Flags opcionales:
 
 ## eval-viz
 
-Igual que `eval` pero abre rerun y muestra en tiempo real un heatmap de activaciones del backbone ResNet-18 por cámara. Útil para ver si el modelo está mirando el cable o el fondo.
+Igual que `eval` pero abre rerun para visualizar la policy en vivo. El tipo de policy se **detecta automáticamente** del `config.json` del checkpoint:
 
-Tres streams en rerun por cámara:
-- `attention/<cam>/image` — imagen raw
-- `attention/<cam>/attention` — heatmap (rojo = alta activación ResNet)
-- `attention/<cam>/overlay` — mezcla 50/50
+- **ACT (ResNet-18):** muestra un heatmap de activaciones por cámara (rojo = alta activación). Útil para ver si el modelo mira el cable o el fondo.
+  - `attention/<cam>/image` — imagen raw
+  - `attention/<cam>/attention` — heatmap
+  - `attention/<cam>/overlay` — mezcla 50/50
+- **SmolVLA (SigLIP + transformer):** el heatmap ResNet **no aplica** a esta arquitectura, así que solo se muestran los streams de cámara crudos (`cameras/<cam>`) mientras la policy corre. Sigue siendo útil para ver qué ven las cámaras en el momento de decidir el pick.
 
 ```bash
 ./cal eval-viz --color red
 ./cal eval-viz --color black --n 3 --fps 15
 ./cal eval-viz --color green --no-lateral
+./cal eval-viz --color red --n-action-steps 15   # más reactivo (SmolVLA)
 ```
 
 Flags opcionales:
 
 | Flag | Default | Descripción |
 |------|---------|-------------|
-| `--policy ID` | `armandomm09/act_terminal_sort` | HF repo_id de la policy |
+| `--policy ID` | `armandomm09/smolvla_terminal_sort` | HF repo_id de la policy |
 | `--n N` | 1 | Número de episodios |
 | `--duration N` | 60 s | Segundos máximos por episodio |
 | `--fps N` | 15 | FPS del loop (más bajo = más margen CPU) |
 | `--no-lateral` | off | No usar la cámara OAK-D |
-| `--device STR` | `cpu` | Dispositivo torch (`cpu` o `cuda`) |
+| `--device STR` | `cpu` | Dispositivo torch (`cpu`, `mps`, `cuda`) |
+| `--n-action-steps N` | (checkpoint=50) | Acciones del chunk antes de re-observar. Bajarlo = más reactivo. No reentrena. |
+| `--num-steps N` | (checkpoint=10) | Pasos de flow-matching (solo SmolVLA). Subirlo = acciones más nítidas. No reentrena. |
 
-> **Nota técnica:** No es atención transformer — es la magnitud L2 de los canales de la última capa conv del ResNet-18. Es un proxy bueno de "dónde está reaccionando la CNN" antes de que el transformer mezcle los tokens.
+> **Nota técnica (ACT):** el heatmap no es atención transformer — es la magnitud L2 de los canales de la última capa conv del ResNet-18. Es un proxy de "dónde reacciona la CNN". Para SmolVLA no existe equivalente directo aquí; ver la atención del transformer requeriría un extractor específico.
 
 ---
 
