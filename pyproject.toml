@@ -1,13 +1,14 @@
 [project]
-name = "cal"
+name = "so101-dume"
 version = "0.1.0"
-description = "Setup y operación del brazo SO-101 (leader + follower) sobre LeRobot."
+description = "Setup y operación del brazo SO-101 (leader + follower) sobre LeRobot: CLI `cal` + TUI `dume`."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 
 dependencies = [
     # LeRobot con soporte Feetech (motores STS3215 del SO-101).
-    # La fuente real (path editable al clone hermano) se define en [tool.uv.sources].
+    # La fuente real (path editable al clone hermano) se define en [tool.uv.sources],
+    # que es solo para dev: el wheel publicado depende de `lerobot[feetech]` desde PyPI.
     "lerobot[feetech]",
     # Utilidades del proyecto
     "pyyaml>=6.0",
@@ -15,11 +16,31 @@ dependencies = [
     "rerun-sdk>=0.20",
     "depthai>=3.6.1",
     "lerobot-attention-visualizer>=0.1.2",
+    # TUI DUM-E (`dume`): framework + gráficos por joint + imágenes inline de cámara
+    "textual>=1.0",
+    "textual-plotext>=1.0",
+    "textual-image[textual]>=0.12",
 ]
 
+[project.scripts]
+# Mismos comandos que los wrappers ./cal y ./dume, pero instalados en el PATH del venv
+# (y disponibles tras `pipx install` / `uv tool install`).
+cal = "so101_cli.cli:main"
+dume = "so101_cli.dume.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# El paquete importable es `so101_cli` (el nombre de distribución es `so101-dume`).
+# hatchling incluye todos los archivos del paquete, incluido so101_cli/dume/dume.tcss.
+packages = ["so101_cli"]
+
 [tool.uv.sources]
-# Apunta al clone editable de huggingface/lerobot anidado en este repo.
+# Dev-only: apunta al clone editable de huggingface/lerobot anidado en este repo.
+# uv lo usa para resolver en local; NO termina en el wheel publicado.
 lerobot = { path = "./lerobot", editable = true }
 
 [tool.uv]
-package = false
+package = true

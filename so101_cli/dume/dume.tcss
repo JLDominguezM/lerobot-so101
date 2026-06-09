@@ -1,0 +1,93 @@
+/* Layout y colores de la TUI DUM-E. Base: theme `textual-dark` + estos ajustes. */
+
+Screen {
+    background: $surface;
+}
+
+#main {
+    height: 1fr;
+}
+
+/* ---- sidebar -------------------------------------------------------- */
+
+#sidebar {
+    width: 28;
+    background: $panel;
+    border-right: tall $primary 40%;
+    padding: 1 1;
+}
+
+#sidebar > ListItem {
+    padding: 0 1;
+}
+
+#sidebar > ListItem.--highlight {
+    background: $primary 30%;
+}
+
+/* ---- content + cockpit grid ---------------------------------------- */
+
+#content {
+    width: 1fr;
+    height: 1fr;
+}
+
+HomeView {
+    height: 1fr;
+}
+
+#cockpit {
+    grid-size: 2 3;
+    grid-gutter: 1 1;
+    padding: 1 1;
+    height: 1fr;
+}
+
+.card {
+    border: round $primary 60%;
+    border-title-color: $accent;
+    border-title-style: bold;
+    padding: 0 1;
+    height: 1fr;
+    overflow-y: auto;
+}
+
+.card-body {
+    height: auto;
+}
+
+/* ---- command preview ----------------------------------------------- */
+
+.command-preview {
+    background: $boost;
+    color: $text;
+    padding: 0 1;
+}
+
+/* ---- placeholder vista próxima fase -------------------------------- */
+
+PlaceholderView {
+    height: 1fr;
+}
+
+.placeholder {
+    width: auto;
+    height: auto;
+    padding: 2 4;
+    border: round $warning 70%;
+    content-align: center middle;
+}
+
+/* ---- help modal ----------------------------------------------------- */
+
+HelpScreen {
+    align: center middle;
+}
+
+#help-box {
+    width: auto;
+    height: auto;
+    padding: 1 2;
+    border: thick $accent;
+    background: $panel;
+}

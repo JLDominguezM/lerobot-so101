@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Wrapper que lanza la TUI DUM-E del proyecto (front-end de `cal`).
+# Uso:
+#   ./dume            # abre el cockpit (home)
+#   ./dume teleop     # salta directo a una vista
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"
+exec "$HERE/.venv/bin/python" -m so101_cli.dume "$@"

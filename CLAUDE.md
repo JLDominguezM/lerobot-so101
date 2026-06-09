@@ -58,6 +58,17 @@ python scripts/setup_one_motor.py follower|leader <name>     # configure a singl
 
 Full flag reference for all `cal` subcommands: `so101_cli/COMMANDS.md`.
 
+```bash
+# DUM-E: TUI rica en iconos (Textual), front-end de `cal`. NO modifica `cal`.
+./dume                 # cockpit (home): conexión, brazos, datasets, modelos, quick actions
+./dume <view>          # salta a una vista (teleop/record/... son placeholder hasta fases sig.)
+./dume --ascii         # sin Nerd Font ni imágenes inline
+```
+
+Detalles de `dume` (arquitectura, fases, empaquetado PyPI/brew): `docs/dume.md`. La TUI vive
+en `so101_cli/dume/` y reusa `diagnostics`/`config`/`poses`/`record_dataset` por import + suspende
+y corre `./cal` para ops pesadas. `cal` queda intacto.
+
 There is no lint/test target — don't invent one.
 
 ## Architecture
