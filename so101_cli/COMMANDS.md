@@ -353,6 +353,46 @@ Flags opcionales:
 
 ---
 
+## Diagnóstico / setup de hardware
+
+Comandos que NO mueven el brazo: solo identifican puertos, configuran motores o
+verifican que todo esté conectado. Útiles antes de teleoperar, grabar o entrenar.
+Son ports a nivel CLI de los scripts sueltos en `scripts/`.
+
+```bash
+# Identificar qué puerto USB es cada brazo (interactivo: desconecta un USB a la vez)
+./cal find-ports
+
+# Asignar IDs 1..6 a los motores de un brazo recién armado (interactivo, uno a la vez)
+./cal setup-motors follower
+./cal setup-motors leader
+
+# Reconfigurar UN solo motor (recovery: si setup-motors crasheó a la mitad)
+./cal setup-motors follower --motor gripper
+
+# Ping al bus de un brazo: ver qué motor IDs (1..6) responden
+./cal scan-bus follower
+./cal scan-bus leader
+
+# Chequeo integral: pinga ambos brazos y abre ambas cámaras un instante
+./cal check
+./cal check --no-leader          # solo follower + cámaras (p.ej. en eval, sin leader)
+./cal check --no-lateral         # salta la OAK-D (si no está montada)
+```
+
+`check` imprime un resumen con ✓/✗ por componente (follower, leader, front, lateral)
+y **termina con código ≠ 0 si algo no responde** — sirve como gate en scripts.
+
+| Comando | Default | Descripción |
+|---------|---------|-------------|
+| `find-ports` | — | Envuelve `lerobot-find-port`. Anota los puertos en `configs/{follower,leader}.yaml`. |
+| `setup-motors W` | los 6 | Envuelve `lerobot-setup-motors` para el brazo `W`. |
+| `setup-motors W --motor N` | — | Configura solo el motor `N` (nombre de joint). |
+| `scan-bus W` | — | `broadcast_ping`; reporta presentes, faltantes e inesperados. |
+| `check` | todo | `--no-leader`, `--no-front`, `--no-lateral` para saltar componentes. |
+
+---
+
 ## Ver un dataset grabado
 
 ```bash

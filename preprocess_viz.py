@@ -22,7 +22,7 @@ Ejemplos:
   python preprocess_viz.py --camera lateral --color green --frame 500
 
   # un PNG suelto:
-  python preprocess_viz.py --source image --image test2.png --color black
+  python preprocess_viz.py --source image --image mi_imagen.png --color black
 
   # captura en vivo (robot/cámara conectada):
   python preprocess_viz.py --source camera --camera front --color red

@@ -7,6 +7,12 @@ import sys
 
 from .dataset_stats import add_dataset_stats_parser
 from .delete_batch import add_delete_batch_parser
+from .diagnostics import (
+    add_check_parser,
+    add_find_ports_parser,
+    add_scan_bus_parser,
+    add_setup_motors_parser,
+)
 from .eval import add_eval_parser
 from .eval_viz import add_eval_viz_parser
 from .follower import add_move_parser, add_replay_parser
@@ -23,7 +29,8 @@ def build_parser() -> argparse.ArgumentParser:
         description="CLI propio del SO-101: move, tune, record (leader) y replay (follower).",
     )
     top = parser.add_subparsers(dest="device", required=True,
-                                metavar="{follower,leader,teleop,record-dataset,eval,eval-viz}")
+                                metavar="{follower,leader,teleop,record-dataset,eval,eval-viz,"
+                                        "find-ports,setup-motors,scan-bus,check}")
 
     # follower ...
     follower = top.add_parser("follower", help="Comandos del brazo follower (ejecuta movimientos).")
@@ -65,6 +72,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     # dataset-stats (top-level: balance de episodios/frames por color)
     add_dataset_stats_parser(top)
+
+    # diagnóstico/setup de hardware (top-level: no mueven el brazo)
+    add_find_ports_parser(top)      # qué USB es cada brazo
+    add_setup_motors_parser(top)    # asigna IDs 1..6 (todos o uno con --motor)
+    add_scan_bus_parser(top)        # ping al bus de un brazo
+    add_check_parser(top)           # chequeo integral: ambos brazos + ambas cámaras
 
     return parser
 

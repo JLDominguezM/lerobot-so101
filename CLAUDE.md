@@ -33,6 +33,11 @@ python scripts/scan_bus.py follower|leader                   # ping motor IDs 1.
 python scripts/setup_one_motor.py follower|leader <name>     # configure a single motor by joint name (recovery tool)
 
 # Project's own CLI (so101_cli package), invoked via the `cal` wrapper:
+./cal find-ports                                            # identify which USB port is which arm (wraps lerobot-find-port)
+./cal setup-motors follower|leader                          # assign motor IDs 1..6 (all, interactive)
+./cal setup-motors follower|leader --motor gripper          # reconfigure ONE motor by joint name (recovery)
+./cal scan-bus follower|leader                              # ping the bus; report which motor IDs 1..6 respond
+./cal check [--no-leader] [--no-front] [--no-lateral]       # connectivity health check: both arms + both cameras
 ./cal follower move --pose home                              # move follower to a named pose
 ./cal follower move 0 -30 -60 0 0 0 --hold-time 2            # move to explicit joint angles (deg)
 ./cal follower move --tune                                   # interactive joint tuning
