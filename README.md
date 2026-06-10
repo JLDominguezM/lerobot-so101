@@ -13,13 +13,16 @@ Built on [Hugging Face LeRobot](https://github.com/huggingface/lerobot) · bench
 [![Built with LeRobot](https://img.shields.io/badge/built%20with-LeRobot-FFD21E.svg)](https://github.com/huggingface/lerobot)
 [![Powered by SmolVLA](https://img.shields.io/badge/policy-SmolVLA%20%2F%20ACT-7C3AED.svg)](https://huggingface.co/blog/smolvla)
 [![TUI: Textual](https://img.shields.io/badge/TUI-Textual-5A2D81.svg)](https://textual.textualize.io/)
+[![HF Model](https://img.shields.io/badge/🤗%20Model-smolvla__terminal__sort__ft-FFD21E.svg)](https://huggingface.co/armandomm09/smolvla_terminal_sort_ft)
+[![HF Dataset](https://img.shields.io/badge/🤗%20Dataset-so101__terminal__sort-FFD21E.svg)](https://huggingface.co/datasets/armandomm09/so101_terminal_sort)
+
+</div>
 
 ```bash
 pip install dume      # then run:
 dume                  # 🚀 the icon-rich SO-101 cockpit (TUI)
 ```
 
-</div>
 
 > [!NOTE]
 > **Dum-E** is the academic project (cable-sorting with a Vision-Language-Action policy); **`dume`** is the open-source tool we built to operate the robot. One install, two modes: the icon-rich Textual **TUI** (`dume`) and a fully scriptable **CLI** (`dume run <subcommand>`).
@@ -35,6 +38,7 @@ dume                  # 🚀 the icon-rich SO-101 cockpit (TUI)
 - [The task](#the-task)
 - [Method & architecture](#method--architecture)
 - [Dataset](#dataset)
+- [Models & datasets](#models--datasets)
 - [Experimental design](#experimental-design)
 - [Results & expectations](#results--expectations)
 - [Install from source (development)](#install-from-source-development)
@@ -161,11 +165,37 @@ Both policies are trained by **supervised behavioral cloning**: the model imitat
 - Each frame synchronizes, from a single capture loop, the **6 follower joint states + front camera + lateral camera**; the 6 target joint positions are sent to the follower every tick at 30 fps.
 - Stored in the **LeRobot v3 layout** on the Hugging Face Hub: episodes batched into shared Parquet files, one MP4 per camera.
 - **Balanced by construction** — episodes are recorded in randomized batches of 3 (one per color) so classes stay even as the dataset grows.
+- **Two published datasets:** the main 232-episode [`so101_terminal_sort`](https://huggingface.co/datasets/armandomm09/so101_terminal_sort), plus a smaller [`so101_terminal_sort_ext`](https://huggingface.co/datasets/armandomm09/so101_terminal_sort_ext) of **fresh demos recorded after we extended the gripper** (see [Experimental design](#experimental-design)). The extended fingers changed the arm's kinematics, so old grasp heights no longer matched — we recorded a clean dataset on the new geometry and fine-tuned from it, deliberately **never mixing old- and new-gripper demos** in one dataset.
 
 <div align="center">
 <img src="docs/assets/dataset-stats.png" alt="dume run dataset-stats output: 232 balanced episodes" width="560">
-<br><sub><code>dume run dataset-stats</code> — 232 episodes, ~57.5 min @ 30 fps, balanced across black/green/red.</sub>
+<br><sub><code>dume run dataset-stats</code> — the main dataset: 232 episodes, ~57.5 min @ 30 fps, balanced across black/green/red.</sub>
 </div>
+
+## Models & datasets
+
+All artifacts are **public on the Hugging Face Hub** 🤗.
+
+**Policies**
+
+| Model | Type | Role |
+|-------|------|------|
+| [`smolvla_terminal_sort_ft`](https://huggingface.co/armandomm09/smolvla_terminal_sort_ft) | SmolVLA (fine-tuned) | **Current best** — fine-tuned on the extended-gripper demos |
+| [`smolvla_terminal_sort`](https://huggingface.co/armandomm09/smolvla_terminal_sort) | SmolVLA | Base VLA trained on the full 232-episode dataset |
+| [`act_terminal_sort`](https://huggingface.co/armandomm09/act_terminal_sort) | ACT | Vision-only baseline for the SmolVLA-vs-ACT benchmark |
+
+**Datasets**
+
+| Dataset | Role |
+|---------|------|
+| [`so101_terminal_sort`](https://huggingface.co/datasets/armandomm09/so101_terminal_sort) | Main balanced cable-sorting dataset (232 episodes, 3 colors) |
+| [`so101_terminal_sort_ext`](https://huggingface.co/datasets/armandomm09/so101_terminal_sort_ext) | Fresh demos on the **extended gripper**, used for the fine-tune |
+
+```bash
+dume run pull model  --repo-id armandomm09/smolvla_terminal_sort_ft         # grab the policy
+dume run pull dataset --repo-id armandomm09/so101_terminal_sort             # grab the dataset
+dume run eval --color red --policy armandomm09/smolvla_terminal_sort_ft     # roll it on the follower
+```
 
 ## Experimental design
 
