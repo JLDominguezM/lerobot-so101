@@ -11,7 +11,7 @@
    silenciamos el logging de nivel INFO de lerobot. El principal ofensor es
    `logging.info(pformat(asdict(cfg)))` en lerobot_record.py que vuelca toda la
    config en pantalla. Dejamos WARNING+ intacto para que los errores reales sigan
-   siendo visibles.
+   siendo visible.
 """
 
 from __future__ import annotations
