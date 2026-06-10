@@ -1,11 +1,11 @@
-"""Subcomandos top-level: ./cal push {dataset,model}  y  ./cal pull {dataset,model}
+"""Subcomandos top-level: dume run push {dataset,model}  y  dume run pull {dataset,model}
 
 Mueve datasets y modelos entre tu máquina y HuggingFace Hub:
 
-    ./cal push dataset      # sube el dataset local grabado con record-batch
-    ./cal push model        # sube un checkpoint entrenado local
-    ./cal pull dataset      # baja el dataset al cache local (~/.cache/.../lerobot)
-    ./cal pull model        # baja un checkpoint a tu cache de HF Hub
+    dume run push dataset      # sube el dataset local grabado con record-batch
+    dume run push model        # sube un checkpoint entrenado local
+    dume run pull dataset      # baja el dataset al cache local (~/.cache/.../lerobot)
+    dume run pull model        # baja un checkpoint a tu cache de HF Hub
 
 `push dataset` reutiliza la lógica de push-dataset (ver push_dataset.py).
 Para los modelos: `train` ya sube el modelo al terminar y `eval` ya lo baja
@@ -39,7 +39,7 @@ def add_push_parser(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser(
         "push",
         help="Sube un dataset o un modelo a HuggingFace Hub.",
-        description="Sube a HF Hub:\n  ./cal push dataset\n  ./cal push model",
+        description="Sube a HF Hub:\n  dume run push dataset\n  dume run push model",
     )
     what = p.add_subparsers(dest="what", required=True, metavar="{dataset,model}")
 
@@ -53,9 +53,9 @@ def add_push_parser(sub: argparse._SubParsersAction) -> None:
         description=(
             "Sube la carpeta de un checkpoint (formato lerobot) a HF Hub.\n\n"
             "Ejemplos:\n"
-            "  ./cal push model\n"
-            "  ./cal push model --path outputs/train/smolvla_terminal_sort/checkpoints/last/pretrained_model\n"
-            "  ./cal push model --repo-id armandomm09/smolvla_terminal_sort\n"
+            "  dume run push model\n"
+            "  dume run push model --path outputs/train/smolvla_terminal_sort/checkpoints/last/pretrained_model\n"
+            "  dume run push model --repo-id armandomm09/smolvla_terminal_sort\n"
         ),
     )
     pm.add_argument(
@@ -112,7 +112,7 @@ def add_pull_parser(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser(
         "pull",
         help="Baja un dataset o un modelo desde HuggingFace Hub.",
-        description="Baja de HF Hub:\n  ./cal pull dataset\n  ./cal pull model",
+        description="Baja de HF Hub:\n  dume run pull dataset\n  dume run pull model",
     )
     what = p.add_subparsers(dest="what", required=True, metavar="{dataset,model}")
 
@@ -123,8 +123,8 @@ def add_pull_parser(sub: argparse._SubParsersAction) -> None:
         description=(
             "Descarga el dataset de HF Hub a ~/.cache/huggingface/lerobot/<repo-id>.\n\n"
             "Ejemplos:\n"
-            "  ./cal pull dataset\n"
-            "  ./cal pull dataset --repo-id armandomm09/so101_terminal_sort\n"
+            "  dume run pull dataset\n"
+            "  dume run pull dataset --repo-id armandomm09/so101_terminal_sort\n"
         ),
     )
     pd.add_argument("--repo-id", default=None,
@@ -139,8 +139,8 @@ def add_pull_parser(sub: argparse._SubParsersAction) -> None:
             "Descarga un modelo de HF Hub al cache (~/.cache/huggingface/hub).\n"
             "Nota: `eval` ya baja el modelo solo; esto es para pre-descargarlo.\n\n"
             "Ejemplos:\n"
-            "  ./cal pull model\n"
-            "  ./cal pull model --repo-id armandomm09/smolvla_terminal_sort\n"
+            "  dume run pull model\n"
+            "  dume run pull model --repo-id armandomm09/smolvla_terminal_sort\n"
         ),
     )
     pm.add_argument("--repo-id", default=None,

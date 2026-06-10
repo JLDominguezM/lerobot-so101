@@ -1,6 +1,7 @@
-# Cheatsheet — CLI `./cal`
+# Cheatsheet — CLI `dume run`
 
-Invocar con `./cal <subcomando>` desde la raíz del repo (no necesita activar el venv).
+Invocar con `dume run <subcomando>` (o `python -m so101_cli.dume run <subcomando>` sin
+instalar). Es el modo CLI scriptable de DUM-E; `dume` a secas abre la TUI.
 
 ---
 
@@ -10,17 +11,17 @@ Mueve el brazo follower a una pose o ángulos explícitos.
 
 ```bash
 # Pose nombrada
-./cal follower move --pose home
-./cal follower move --pose zeros|rest|wave|open|close
+dume run follower move --pose home
+dume run follower move --pose zeros|rest|wave|open|close
 
 # Ángulos explícitos (6 valores en grados: pan lift elbow wflex wroll gripper)
-./cal follower move 0 -30 -60 0 0 0
+dume run follower move 0 -30 -60 0 0 0
 
 # Listar poses disponibles
-./cal follower move --list
+dume run follower move --list
 
 # Modo interactivo (va a ceros y deja ajustar joint por joint con teclado)
-./cal follower move --tune
+dume run follower move --tune
 ```
 
 Flags opcionales:
@@ -40,8 +41,8 @@ Flags opcionales:
 Reproduce un archivo `.json` grabado con el leader.
 
 ```bash
-./cal follower replay paths/mi_trayectoria.json
-./cal follower replay poses/wave.json
+dume run follower replay paths/mi_trayectoria.json
+dume run follower replay poses/wave.json
 ```
 
 Flags opcionales:
@@ -61,8 +62,8 @@ Flags opcionales:
 Graba poses estáticas: mueve el leader a mano y presiona `s` para capturar.
 
 ```bash
-./cal leader record-waypoint paths/mi_ruta.json
-./cal leader record-waypoint paths/mi_ruta.json --append   # agrega al final si ya existe
+dume run leader record-waypoint paths/mi_ruta.json
+dume run leader record-waypoint paths/mi_ruta.json --append   # agrega al final si ya existe
 ```
 
 Teclas: `s` guardar pose · `q` terminar
@@ -74,8 +75,8 @@ Teclas: `s` guardar pose · `q` terminar
 Graba un movimiento continuo a N Hz.
 
 ```bash
-./cal leader record-trajectory paths/mi_traj.json
-./cal leader record-trajectory paths/mi_traj.json --rate 30
+dume run leader record-trajectory paths/mi_traj.json
+dume run leader record-trajectory paths/mi_traj.json --rate 30
 ```
 
 Teclas: `r` iniciar/parar grabación · `q` terminar y guardar
@@ -87,9 +88,9 @@ Teclas: `r` iniciar/parar grabación · `q` terminar y guardar
 Conecta leader → follower en vivo. Abre rerun automáticamente con cámaras y joints.
 
 ```bash
-./cal teleop                           # solo visualización (nada se escribe a disco)
-./cal teleop --record                  # graba trayectoria .json + .rrd a paths/teleop_<timestamp>
-./cal teleop --record --out paths/demo # ruta de salida personalizada
+dume run teleop                           # solo visualización (nada se escribe a disco)
+dume run teleop --record                  # graba trayectoria .json + .rrd a paths/teleop_<timestamp>
+dume run teleop --record --out paths/demo # ruta de salida personalizada
 ```
 
 Flags opcionales:
@@ -116,10 +117,10 @@ Teclas:
 Graba un dataset de demos en formato LeRobotDataset (envuelve `lerobot-record`).
 
 ```bash
-./cal record-dataset --color red
-./cal record-dataset --color blue --n 20
-./cal record-dataset --color red --resume --repo-id armando/so101_clips
-./cal record-dataset --color red --dry-run   # solo muestra el comando, no ejecuta
+dume run record-dataset --color red
+dume run record-dataset --color blue --n 20
+dume run record-dataset --color red --resume --repo-id armando/so101_clips
+dume run record-dataset --color red --dry-run   # solo muestra el comando, no ejecuta
 ```
 
 Flags:
@@ -147,20 +148,20 @@ Sesión estructurada de M batches de 3 episodios (negro / verde / rojo en orden 
 
 ```bash
 # Sesión estándar: 10 batches = 30 episodios
-./cal record-batch
+dume run record-batch
 
 # Batches configurables
-./cal record-batch --batches 5          # 15 episodios (5 batches)
-./cal record-batch --batches 20         # 60 episodios (20 batches)
+dume run record-batch --batches 5          # 15 episodios (5 batches)
+dume run record-batch --batches 20         # 60 episodios (20 batches)
 
 # Ver el plan y el primer comando sin ejecutar nada
-./cal record-batch --dry-run
+dume run record-batch --dry-run
 
 # Continuar una sesión anterior (auto-detecta episodios ya grabados)
-./cal record-batch --batches 20
+dume run record-batch --batches 20
 
 # Subir a HF Hub al terminar
-./cal record-batch --batches 10 --push
+dume run record-batch --batches 10 --push
 ```
 
 **Flujo por episodio:**
@@ -190,11 +191,11 @@ Flags opcionales:
 Corre la policy entrenada en el robot real. **No necesita el brazo leader conectado.**
 
 ```bash
-./cal eval --color red                      # 1 rollout del cable rojo (sin grabar)
-./cal eval --color black --n 3              # 3 rollouts del cable negro
-./cal eval --color green --record          # corre + graba rollouts a dataset local
-./cal eval --color red --n-action-steps 15 # más reactivo: re-observa más seguido
-./cal eval --color red --dry-run           # muestra el comando, no ejecuta
+dume run eval --color red                      # 1 rollout del cable rojo (sin grabar)
+dume run eval --color black --n 3              # 3 rollouts del cable negro
+dume run eval --color green --record          # corre + graba rollouts a dataset local
+dume run eval --color red --n-action-steps 15 # más reactivo: re-observa más seguido
+dume run eval --color red --dry-run           # muestra el comando, no ejecuta
 ```
 
 Flags opcionales:
@@ -217,7 +218,7 @@ Flags opcionales:
 
 > **Nota:** `--n-action-steps` y `--num-steps` son overrides del config del checkpoint que se aplican en inferencia (sin reentrenar). Bajar `n_action_steps` aumenta el cómputo (más forward passes); si el brazo no aguanta el FPS, súbelo o baja `--fps`.
 
-> **OFFLINE por defecto:** `eval` corre con `HF_HUB_OFFLINE=1`/`TRANSFORMERS_OFFLINE=1` para no tocar la red — así no crashea por DNS cuando el robot no tiene internet (`OSError: Can't load processor ...` / `Errno 8`). El modelo y el processor base de SmolVLA (`HuggingFaceTB/SmolVLM2-500M-Video-Instruct`) ya deben estar en el cache. Si entrenaste un checkpoint nuevo o aún no está cacheado, primero (con internet): `./cal pull model` y `./cal eval --color red --online` una vez para bajar lo que falte; después ya corre offline solo.
+> **OFFLINE por defecto:** `eval` corre con `HF_HUB_OFFLINE=1`/`TRANSFORMERS_OFFLINE=1` para no tocar la red — así no crashea por DNS cuando el robot no tiene internet (`OSError: Can't load processor ...` / `Errno 8`). El modelo y el processor base de SmolVLA (`HuggingFaceTB/SmolVLM2-500M-Video-Instruct`) ya deben estar en el cache. Si entrenaste un checkpoint nuevo o aún no está cacheado, primero (con internet): `dume run pull model` y `dume run eval --color red --online` una vez para bajar lo que falte; después ya corre offline solo.
 
 ---
 
@@ -227,27 +228,27 @@ Mover datos y entrenar. El flujo típico es: grabas en la Mac → `push dataset`
 
 ```bash
 # Subir / bajar el DATASET
-./cal push dataset                  # sube el dataset local grabado con record-batch
-./cal push dataset --dry-run        # muestra info sin subir nada
-./cal pull dataset                  # baja el dataset al cache local
+dume run push dataset                  # sube el dataset local grabado con record-batch
+dume run push dataset --dry-run        # muestra info sin subir nada
+dume run pull dataset                  # baja el dataset al cache local
 
 # Subir / bajar el MODELO (train ya sube solo; eval ya baja solo — esto es manual)
-./cal push model                    # sube outputs/train/<policy>/checkpoints/last/pretrained_model
-./cal push model --path <carpeta>   # sube un checkpoint específico
-./cal pull model                    # baja el checkpoint al cache de HF
+dume run push model                    # sube outputs/train/<policy>/checkpoints/last/pretrained_model
+dume run push model --path <carpeta>   # sube un checkpoint específico
+dume run pull model                    # baja el checkpoint al cache de HF
 
 # Entrenar
-./cal train                         # SmolVLA sobre <HF_USER>/so101_terminal_sort, device cuda
-./cal train --type act              # entrena ACT (sin language conditioning)
-./cal train --device mps            # forzar Mac (LENTO para SmolVLA)
-./cal train --dry-run               # muestra el comando lerobot-train, no ejecuta
+dume run train                         # SmolVLA sobre <HF_USER>/so101_terminal_sort, device cuda
+dume run train --type act              # entrena ACT (sin language conditioning)
+dume run train --device mps            # forzar Mac (LENTO para SmolVLA)
+dume run train --dry-run               # muestra el comando lerobot-train, no ejecuta
 
 # Fine-tuning: continuar desde un checkpoint en vez de entrenar desde cero
-./cal train --finetune <HF_USER>/smolvla_terminal_sort \
+dume run train --finetune <HF_USER>/smolvla_terminal_sort \
             --dataset so101_terminal_sort_ext --steps 20000
 ```
 
-**`./cal train`** (default) entrena `<HF_USER>/smolvla_terminal_sort` — el mismo repo que `eval` usa por defecto, así que después de entrenar puedes hacer `./cal eval --color red` directo.
+**`dume run train`** (default) entrena `<HF_USER>/smolvla_terminal_sort` — el mismo repo que `eval` usa por defecto, así que después de entrenar puedes hacer `dume run eval --color red` directo.
 
 Flags de `train`:
 
@@ -276,9 +277,9 @@ Flags de `pull dataset` / `pull model`: `--repo-id`.
 Muestra el balance del dataset local: episodios y frames por color/tarea. Úsalo **antes de gastar una noche de entrenamiento** para confirmar que cada color está parejo.
 
 ```bash
-./cal dataset-stats                                  # balance de armando/so101_terminal_sort
-./cal dataset-stats --repo-id armando/mi_dataset     # otro dataset
-./cal dataset-stats --root /ruta/al/dataset          # ruta explícita
+dume run dataset-stats                                  # balance de armando/so101_terminal_sort
+dume run dataset-stats --repo-id armando/mi_dataset     # otro dataset
+dume run dataset-stats --root /ruta/al/dataset          # ruta explícita
 ```
 
 Salida: tabla con episodios/frames/segundos por color, una barra de reparto, y un veredicto (✓ balanceado / ⚠ desbalanceado con cuántos episodios faltan para emparejar).
@@ -301,9 +302,9 @@ Borra los 3 episodios (negro/verde/rojo) de un batch completo del dataset local.
 **Fórmula:** batch N (1-indexado) → episodios `(N-1)×3`, `(N-1)×3+1`, `(N-1)×3+2`
 
 ```bash
-./cal delete-batch 21              # borra episodios 60, 61, 62
-./cal delete-batch 5 --dry-run     # muestra qué borraría sin ejecutar
-./cal delete-batch 21 --push       # borra y sube el dataset modificado a HF Hub
+dume run delete-batch 21              # borra episodios 60, 61, 62
+dume run delete-batch 5 --dry-run     # muestra qué borraría sin ejecutar
+dume run delete-batch 21 --push       # borra y sube el dataset modificado a HF Hub
 ```
 
 El dataset original queda respaldado automáticamente por `lerobot-edit-dataset` antes de modificar.
@@ -329,10 +330,10 @@ Igual que `eval` pero abre rerun para visualizar la policy en vivo. El tipo de p
 - **SmolVLA (SigLIP + transformer):** el heatmap ResNet **no aplica** a esta arquitectura, así que solo se muestran los streams de cámara crudos (`cameras/<cam>`) mientras la policy corre. Sigue siendo útil para ver qué ven las cámaras en el momento de decidir el pick.
 
 ```bash
-./cal eval-viz --color red
-./cal eval-viz --color black --n 3 --fps 15
-./cal eval-viz --color green --no-lateral
-./cal eval-viz --color red --n-action-steps 15   # más reactivo (SmolVLA)
+dume run eval-viz --color red
+dume run eval-viz --color black --n 3 --fps 15
+dume run eval-viz --color green --no-lateral
+dume run eval-viz --color red --n-action-steps 15   # más reactivo (SmolVLA)
 ```
 
 Flags opcionales:
@@ -361,23 +362,23 @@ Son ports a nivel CLI de los scripts sueltos en `scripts/`.
 
 ```bash
 # Identificar qué puerto USB es cada brazo (interactivo: desconecta un USB a la vez)
-./cal find-ports
+dume run find-ports
 
 # Asignar IDs 1..6 a los motores de un brazo recién armado (interactivo, uno a la vez)
-./cal setup-motors follower
-./cal setup-motors leader
+dume run setup-motors follower
+dume run setup-motors leader
 
 # Reconfigurar UN solo motor (recovery: si setup-motors crasheó a la mitad)
-./cal setup-motors follower --motor gripper
+dume run setup-motors follower --motor gripper
 
 # Ping al bus de un brazo: ver qué motor IDs (1..6) responden
-./cal scan-bus follower
-./cal scan-bus leader
+dume run scan-bus follower
+dume run scan-bus leader
 
 # Chequeo integral: pinga ambos brazos y abre ambas cámaras un instante
-./cal check
-./cal check --no-leader          # solo follower + cámaras (p.ej. en eval, sin leader)
-./cal check --no-lateral         # salta la OAK-D (si no está montada)
+dume run check
+dume run check --no-leader          # solo follower + cámaras (p.ej. en eval, sin leader)
+dume run check --no-lateral         # salta la OAK-D (si no está montada)
 ```
 
 `check` imprime un resumen con ✓/✗ por componente (follower, leader, front, lateral)
@@ -413,4 +414,4 @@ El viewer abre rerun con el video de la cámara `front` y las señales de `actio
 4: wrist_flex     5: wrist_roll      6: gripper
 ```
 
-Ejemplo: `./cal follower move 0 -104 91 41 0 1` = pose `home`
+Ejemplo: `dume run follower move 0 -104 91 41 0 1` = pose `home`

@@ -1,4 +1,4 @@
-"""Subcomando top-level: ./cal delete-batch N
+"""Subcomando top-level: dume run delete-batch N
 
 Borra los episodios de un batch (negro/verde/rojo) del dataset local.
 Batch N (1-indexado) corresponde a los episodios (N-1)*3 .. (N-1)*3+2.
@@ -9,9 +9,9 @@ Usa `lerobot-edit-dataset --operation.type=delete_episodes` internamente.
 La operación es in-place: guarda un backup automático antes de modificar.
 
 Ejemplos:
-    ./cal delete-batch 21
-    ./cal delete-batch 21 --repo-id armando/so101_terminal_sort
-    ./cal delete-batch 21 --dry-run
+    dume run delete-batch 21
+    dume run delete-batch 21 --repo-id armando/so101_terminal_sort
+    dume run delete-batch 21 --dry-run
 """
 
 from __future__ import annotations
@@ -41,8 +41,8 @@ def add_delete_batch_parser(sub: argparse._SubParsersAction) -> None:
             "Batch N (1-indexado) → episodios (N-1)×3, (N-1)×3+1, (N-1)×3+2.\n"
             "Si el batch quedó parcialmente grabado, borra solo los que existan.\n\n"
             "Ejemplos:\n"
-            "  ./cal delete-batch 21\n"
-            "  ./cal delete-batch 5 --dry-run\n"
+            "  dume run delete-batch 21\n"
+            "  dume run delete-batch 5 --dry-run\n"
         ),
     )
     p.add_argument("batch", type=int,

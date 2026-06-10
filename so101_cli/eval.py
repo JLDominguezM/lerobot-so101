@@ -1,4 +1,4 @@
-"""Subcomando top-level: ./cal eval
+"""Subcomando top-level: dume run eval
 
 Corre una policy entrenada en el robot real usando lerobot-rollout.
 No necesita el brazo leader conectado — la policy maneja el robot.
@@ -8,10 +8,10 @@ Estrategias:
   sentry  → igual pero graba cada rollout al dataset local
 
 Ejemplo:
-    ./cal eval --color red
-    ./cal eval --color black --n 3 --duration 45
-    ./cal eval --color green --record
-    ./cal eval --color red --dry-run
+    dume run eval --color red
+    dume run eval --color black --n 3 --duration 45
+    dume run eval --color green --record
+    dume run eval --color red --dry-run
 """
 
 from __future__ import annotations
@@ -37,9 +37,9 @@ def add_eval_parser(sub: argparse._SubParsersAction) -> None:
         description=(
             "Ejecuta la policy sobre el follower. No necesita el brazo leader.\n\n"
             "Ejemplos:\n"
-            "  ./cal eval --color red\n"
-            "  ./cal eval --color black --n 3 --duration 45\n"
-            "  ./cal eval --color green --record   # guarda rollouts a disco\n"
+            "  dume run eval --color red\n"
+            "  dume run eval --color black --n 3 --duration 45\n"
+            "  dume run eval --color green --record   # guarda rollouts a disco\n"
         ),
     )
     p.add_argument(

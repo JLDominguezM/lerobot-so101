@@ -1,4 +1,4 @@
-"""Render de un comando compuesto (`$ cal record-dataset ...`).
+"""Render de un comando compuesto (`$ dume run record-dataset ...`).
 
 Se usa ya (preview de quick actions) y será central en los formularios de Fase 3,
 donde cada campo del form re-compone el comando antes del suspend-and-run.

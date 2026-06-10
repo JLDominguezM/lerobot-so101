@@ -139,7 +139,7 @@ class HomeView(Vertical):
 
     def _fill_actions(self) -> None:
         t = Text()
-        t.append("Suspende la TUI y corre cal:\n", style="dim")
+        t.append("Suspende la TUI y corre dume run:\n", style="dim")
         for key, desc in (("c", "check  (brazos + cámaras)"),
                           ("f", "find-ports"),
                           ("s", "scan-bus follower"),

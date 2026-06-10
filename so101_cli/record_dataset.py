@@ -1,4 +1,4 @@
-"""Subcomandos top-level: ./cal record-dataset  y  ./cal record-batch
+"""Subcomandos top-level: dume run record-dataset  y  dume run record-batch
 
 record-dataset : sesión libre de N episodios con un solo color/tarea.
 record-batch   : sesión estructurada de M batches de 3 episodios (negro/verde/rojo
@@ -502,7 +502,7 @@ def cmd_record_batch(args: argparse.Namespace) -> int:
                 input()
             except KeyboardInterrupt:
                 print("\n\nInterrumpido por el usuario. El dataset queda en:", root)
-                _set_terminal_title("cal record-batch — detenido")
+                _set_terminal_title("dume run record-batch — detenido")
                 return 0
 
             # Flush de nuevo: descarta flechas/Esc que se hayan colado junto al Enter
@@ -527,16 +527,16 @@ def cmd_record_batch(args: argparse.Namespace) -> int:
                 rc = _run_lerobot_filtered(cmd, env)
             except KeyboardInterrupt:
                 print("\n\nInterrumpido durante la grabación. El dataset queda en:", root)
-                _set_terminal_title("cal record-batch — detenido")
+                _set_terminal_title("dume run record-batch — detenido")
                 return 0
 
             if rc != 0:
                 print(f"\nERROR: lerobot-record terminó con código {rc} (episodio {global_ep}).")
                 print("El dataset queda en:", root)
-                _set_terminal_title("cal record-batch — ERROR")
+                _set_terminal_title("dume run record-batch — ERROR")
                 return rc
             print(f"\n  Episodio {global_ep} guardado.")
-            _set_terminal_title(f"cal record-batch — ep {global_ep}/{total_target} listo")
+            _set_terminal_title(f"dume run record-batch — ep {global_ep}/{total_target} listo")
 
         # Fin de batch — pedir reset del environment (excepto si es el último batch)
         if batch_num < batch_start + batches_remaining - 1:

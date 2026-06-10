@@ -1,9 +1,39 @@
 [project]
 name = "dume"
 version = "0.1.0"
-description = "Setup y operación del brazo SO-101 (leader + follower) sobre LeRobot: CLI `cal` + TUI `dume`."
+description = "Operate the SO-101 robotic arm (leader + follower) on LeRobot: scriptable CLI `cal` + icon-rich TUI `dume`."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Pablo Armando Mac Beth Milian" },
+    { name = "José Luis Domínguez Morales" },
+    { name = "Paola Llamas Hernández" },
+    { name = "Jocelyn Anahid Velarde Barrón" },
+    { name = "Héctor Eduardo Tovar Mendoza" },
+]
+keywords = [
+    "robotics", "lerobot", "so-101", "so-arm101", "so-arm100",
+    "imitation-learning", "behavioral-cloning", "vla",
+    "vision-language-action", "smolvla", "act", "teleoperation",
+    "feetech", "sts3215", "tui", "textual", "cli",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: System :: Hardware",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Natural Language :: English",
+    "Natural Language :: Spanish",
+]
 
 dependencies = [
     # LeRobot con soporte Feetech (motores STS3215 del SO-101).
@@ -23,10 +53,15 @@ dependencies = [
 ]
 
 [project.scripts]
-# Mismos comandos que los wrappers ./cal y ./dume, pero instalados en el PATH del venv
-# (y disponibles tras `pipx install` / `uv tool install`).
-cal = "so101_cli.cli:main"
+# Un único comando `dume`: TUI (`dume`) + CLI scriptable (`dume run <subcomando>`).
+# Instalado en el PATH del venv y disponible tras `pipx install` / `uv tool install`.
 dume = "so101_cli.dume.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/armandomm09/dume"
+Repository = "https://github.com/armandomm09/dume"
+Documentation = "https://github.com/armandomm09/dume"
+PyPI = "https://pypi.org/project/dume/"
 
 [build-system]
 requires = ["hatchling"]

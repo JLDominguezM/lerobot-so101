@@ -1,4 +1,4 @@
-"""Subcomando top-level: ./cal eval-viz
+"""Subcomando top-level: dume run eval-viz
 
 Corre la policy entrenada en el robot real y la visualiza en rerun.
 
@@ -17,10 +17,10 @@ con --cv2. El tipo se detecta automáticamente del config.json del checkpoint.
 No necesita el brazo leader conectado.
 
 Ejemplo:
-    ./cal eval-viz --color red
-    ./cal eval-viz --color black --n 3 --fps 15
-    ./cal eval-viz --color green --no-lateral
-    ./cal eval-viz --color red --n-action-steps 15   # más reactivo (SmolVLA)
+    dume run eval-viz --color red
+    dume run eval-viz --color black --n 3 --fps 15
+    dume run eval-viz --color green --no-lateral
+    dume run eval-viz --color red --n-action-steps 15   # más reactivo (SmolVLA)
 """
 
 from __future__ import annotations
@@ -131,8 +131,8 @@ def add_eval_viz_parser(sub: argparse._SubParsersAction) -> None:
             "ACT: heatmap de activaciones ResNet (<cam>/image|attention|overlay).\n"
             "SmolVLA: heatmap de magnitud por patch del encoder SigLIP (<cam>/attention|overlay|image).\n\n"
             "Ejemplos:\n"
-            "  ./cal eval-viz --color red\n"
-            "  ./cal eval-viz --color black --n 3\n"
+            "  dume run eval-viz --color red\n"
+            "  dume run eval-viz --color black --n 3\n"
         ),
     )
     p.add_argument(

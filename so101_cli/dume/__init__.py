@@ -1,6 +1,7 @@
-"""DUM-E: TUI rica en iconos para el SO-101 (front-end amistoso de `cal`).
+"""DUM-E: TUI rica en iconos para el SO-101, con un CLI scriptable `dume run`.
 
-Subpaquete autocontenido. NO modifica el CLI `cal`: lo reusa importando sus
-helpers (diagnostics, config, poses, record_dataset) y, para ops pesadas o
-interactivas, suspendiendo la TUI y corriendo `./cal <subcmd>` con TTY completo.
+Dos modos sobre los mismos módulos de `so101_cli`: la TUI (`dume`) y el CLI
+(`dume run <subcmd>`, antes `cal`). La TUI reusa los helpers (diagnostics, config,
+poses, record_dataset) por import y, para ops pesadas o interactivas, suspende y
+corre `dume run <subcmd>` con TTY completo.
 """

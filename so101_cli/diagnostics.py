@@ -5,11 +5,11 @@ hardware antes de teleoperar, grabar o entrenar. Son ports a nivel CLI de los
 scripts sueltos en `scripts/` (find_ports, scan_bus, setup_one_motor,
 01_setup_motors), más un chequeo integral nuevo:
 
-  cal find-ports                                  -> lerobot-find-port (qué USB es cada brazo)
-  cal setup-motors follower|leader                -> asigna IDs 1..6 a los 6 motores (interactivo)
-  cal setup-motors follower|leader --motor gripper -> reconfigura UN solo motor (recovery)
-  cal scan-bus follower|leader                    -> ping al bus: qué motor IDs responden
-  cal check                                       -> chequeo integral: ambos brazos + ambas cámaras
+  dume run find-ports                                  -> lerobot-find-port (qué USB es cada brazo)
+  dume run setup-motors follower|leader                -> asigna IDs 1..6 a los 6 motores (interactivo)
+  dume run setup-motors follower|leader --motor gripper -> reconfigura UN solo motor (recovery)
+  dume run scan-bus follower|leader                    -> ping al bus: qué motor IDs responden
+  dume run check                                       -> chequeo integral: ambos brazos + ambas cámaras
 """
 
 from __future__ import annotations
@@ -122,7 +122,7 @@ def cmd_scan_bus(args: argparse.Namespace) -> int:
 
     if not ids_models:
         print("Nada en el bus. Verifica:")
-        print("  - puerto correcto (configs/{follower,leader}.yaml; o cal find-ports)")
+        print("  - puerto correcto (configs/{follower,leader}.yaml; o dume run find-ports)")
         print("  - fuente de poder de los motores")
         print("  - jumper del Waveshare en 'B' (USB)")
         print("  - JST bien encajados")

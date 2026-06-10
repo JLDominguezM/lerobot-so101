@@ -1,9 +1,9 @@
-"""Vista Teleop: formulario que re-compone `cal teleop …` y lo lanza (suspend-and-run).
+"""Vista Teleop: formulario que re-compone `dume run teleop …` y lo lanza (suspend-and-run).
 
 Es el primer formulario "real" de la TUI (Fase 2) y fija el patrón que reusarán
 record/eval/train: campos editables → CommandPreview en vivo → suspender la TUI y
-correr `./cal teleop <flags>` con el TTY completo (lerobot toma el teclado y la
-ventana de rerun). NO reimplementa teleop: delega 1:1 en el subcomando de `cal`.
+correr `dume run teleop <flags>` con el TTY completo (lerobot toma el teclado y la
+ventana de rerun). NO reimplementa teleop: delega 1:1 en el subcomando `dume run`.
 
 Pre-vuelo bajo demanda: el botón "Comprobar conexión" corre `probe_connection()` en
 un worker con hilo (abre→pinga→cierra, sin retener el bus ni las cámaras), igual que
@@ -17,7 +17,7 @@ from textual import work
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Button, Input, Label, Static, Switch
 
-from ..engine.runner import run_cal
+from ..engine.runner import run_cli
 from ..engine.status import probe_connection
 from ..theme import AMBER, DIM, RED, S_OK
 from ..widgets.command_preview import CommandPreview
@@ -111,7 +111,7 @@ class TeleopView(Vertical):
     # ---- composición del comando ---------------------------------------
 
     def _compose_flags(self) -> tuple[list[str], str | None]:
-        """Lee el formulario → (flags para `cal teleop`, error). error=None si ok."""
+        """Lee el formulario → (flags para `dume run teleop`, error). error=None si ok."""
         flags: list[str] = []
 
         rate = self.query_one("#f-rate", Input).value.strip()
@@ -152,17 +152,17 @@ class TeleopView(Vertical):
             preview.update(Text(f"⚠ {error}", style=RED))
             launch.disabled = True
             return
-        preview.set_command(["cal", "teleop", *flags])
+        preview.set_command(["dume", "run", "teleop", *flags])
         launch.disabled = False
 
-    # ---- lanzar (suspende la TUI y corre cal) ---------------------------
+    # ---- lanzar (suspende la TUI y corre `dume run teleop`) -------------
 
     def _launch(self) -> None:
         flags, error = self._compose_flags()
         if error is not None:
             self._update_preview()
             return
-        run_cal(self.app, "teleop", *flags)
+        run_cli(self.app, "teleop", *flags)
         # Al volver del subproceso, re-sondear para reflejar el estado real.
         self.refresh_view()
 

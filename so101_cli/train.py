@@ -1,4 +1,4 @@
-"""Subcomando top-level: ./cal train
+"""Subcomando top-level: dume run train
 
 Entrena una policy (SmolVLA por defecto) sobre un dataset grabado, envolviendo
 `lerobot-train`. Equivalente a scripts/09_train_smolvla.sh pero integrado al CLI.
@@ -10,15 +10,15 @@ local en outputs/train/<policy>/.
 Requiere GPU (CUDA en el Spark). En Mac (mps) es MUY lento para SmolVLA.
 
 Ejemplos:
-    ./cal train                                  # smolvla sobre <HF_USER>/so101_terminal_sort
-    ./cal train --dataset so101_terminal_sort
-    ./cal train --policy smolvla_v2
-    ./cal train --type act                       # entrena ACT (sin language)
-    ./cal train --device mps                     # forzar Mac (lento)
-    ./cal train --dry-run
+    dume run train                                  # smolvla sobre <HF_USER>/so101_terminal_sort
+    dume run train --dataset so101_terminal_sort
+    dume run train --policy smolvla_v2
+    dume run train --type act                       # entrena ACT (sin language)
+    dume run train --device mps                     # forzar Mac (lento)
+    dume run train --dry-run
 
 Fine-tuning (continuar desde un checkpoint en vez de entrenar desde cero):
-    ./cal train --finetune <HF_USER>/smolvla_terminal_sort \\
+    dume run train --finetune <HF_USER>/smolvla_terminal_sort \\
                 --dataset so101_terminal_sort_ext --steps 20000
   Inicializa pesos+config desde el checkpoint (--policy.path de lerobot) y los
   adapta al nuevo dataset. Úsalo p.ej. tras cambiar el gripper: graba pocas
@@ -55,10 +55,10 @@ def add_train_parser(sub: argparse._SubParsersAction) -> None:
         description=(
             "Envuelve lerobot-train. SmolVLA usa el task string como input real.\n\n"
             "Ejemplos:\n"
-            "  ./cal train\n"
-            "  ./cal train --dataset so101_terminal_sort --policy smolvla_v2\n"
-            "  ./cal train --device mps      # Mac (lento)\n"
-            "  ./cal train --dry-run\n"
+            "  dume run train\n"
+            "  dume run train --dataset so101_terminal_sort --policy smolvla_v2\n"
+            "  dume run train --device mps      # Mac (lento)\n"
+            "  dume run train --dry-run\n"
         ),
     )
     p.add_argument("--dataset", default=DEFAULT_DATASET,

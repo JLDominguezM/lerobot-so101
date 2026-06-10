@@ -72,7 +72,7 @@ def tune_loop(robot, max_speed: float, duration: float, rate: float) -> bool:
             continue
         if cmd == "save":
             vals = " ".join(f"{current[j]:.1f}" for j in JOINTS)
-            print(f"  python -m so101_cli follower move {vals} --duration {duration} --max-deg-per-s {max_speed}")
+            print(f"  dume run follower move {vals} --duration {duration} --max-deg-per-s {max_speed}")
             continue
         if cmd == "speed" and len(parts) == 2:
             max_speed = float(parts[1]); print(f"  max_deg_per_s = {max_speed}"); continue

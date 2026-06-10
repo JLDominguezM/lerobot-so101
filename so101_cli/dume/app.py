@@ -120,10 +120,10 @@ class DumeApp(App):
             view.refresh_view()
 
     def action_quick(self, subcmd: str, which: str | None = None) -> None:
-        from .engine.runner import run_cal
+        from .engine.runner import run_cli
 
         args = (which,) if which else ()
-        run_cal(self, subcmd, *args)
+        run_cli(self, subcmd, *args)
         self.action_refresh()
 
     def action_help(self) -> None:

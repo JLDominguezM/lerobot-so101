@@ -1,4 +1,9 @@
-"""Entry point del CLI: dispatches a subcomandos follower / leader."""
+"""Árbol de subcomandos del CLI `dume run` (modo scriptable de DUM-E).
+
+`build_parser()` es puro wiring: importa los `add_*_parser()` de cada módulo de
+subcomando (la lógica vive en esos módulos, no acá). Lo invoca
+`so101_cli.dume.__main__` cuando el primer argumento es `run`.
+"""
 
 from __future__ import annotations
 
@@ -25,8 +30,9 @@ from .transfer import add_pull_parser, add_push_parser
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="cal",
-        description="CLI propio del SO-101: move, tune, record (leader) y replay (follower).",
+        prog="dume run",
+        description="CLI scriptable del SO-101: move/replay (follower), record (leader), "
+                    "teleop, record-dataset, train, eval y utilidades de hardware.",
     )
     top = parser.add_subparsers(dest="device", required=True,
                                 metavar="{follower,leader,teleop,record-dataset,eval,eval-viz,"

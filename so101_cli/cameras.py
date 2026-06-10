@@ -1,4 +1,4 @@
-"""Camera utilities for the SO-101 setup (preview en vivo de `./cal teleop`).
+"""Camera utilities for the SO-101 setup (preview en vivo de `dume run teleop`).
 
 Dos cámaras físicas con roles distintos y APIs muy distintas:
 

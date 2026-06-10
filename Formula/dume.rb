@@ -8,13 +8,13 @@
 #          brew update-python-resources Formula/dume.rb
 #      Hasta entonces, lo más práctico es un tap que instale en un virtualenv vía pip.
 #   3) Recordá que el arm/cámaras siguen siendo necesarios en runtime; la fórmula
-#      sólo entrega los comandos `dume` y `cal`.
+#      sólo entrega el comando `dume` (TUI + el CLI `dume run`).
 #
 # Instalación local (tap propio):  brew install --build-from-source ./Formula/dume.rb
 class Dume < Formula
   include Language::Python::Virtualenv
 
-  desc "DUM-E TUI + cal CLI para operar el brazo SO-101 sobre LeRobot"
+  desc "DUM-E: TUI + CLI (dume run) para operar el brazo SO-101 sobre LeRobot"
   homepage "https://github.com/armandomm09/so101"
   url "https://files.pythonhosted.org/packages/source/s/dume/so101_dume-0.1.0.tar.gz"
   sha256 "REEMPLAZAR_TRAS_PUBLICAR_EN_PYPI"

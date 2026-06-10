@@ -1,4 +1,4 @@
-"""Subcomando top-level: ./cal dataset-stats
+"""Subcomando top-level: dume run dataset-stats
 
 Muestra el balance del dataset local: episodios y frames por tarea (color).
 Úsalo ANTES de gastar una noche de entrenamiento para verificar que cada color
@@ -9,9 +9,9 @@ el task string ("pick the <color> cable..."). Por eso el balance por terminal no
 se puede calcular aquí; revisa tu protocolo de grabación para esa parte.
 
 Ejemplos:
-    ./cal dataset-stats
-    ./cal dataset-stats --repo-id armando/so101_terminal_sort
-    ./cal dataset-stats --root /ruta/al/dataset
+    dume run dataset-stats
+    dume run dataset-stats --repo-id armando/so101_terminal_sort
+    dume run dataset-stats --root /ruta/al/dataset
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ def add_dataset_stats_parser(sub: argparse._SubParsersAction) -> None:
             "La posición de la terminal NO está en el dataset, así que solo se\n"
             "reporta el balance por color.\n\n"
             "Ejemplos:\n"
-            "  ./cal dataset-stats\n"
-            "  ./cal dataset-stats --repo-id armando/so101_terminal_sort\n"
+            "  dume run dataset-stats\n"
+            "  dume run dataset-stats --repo-id armando/so101_terminal_sort\n"
         ),
     )
     p.add_argument("--repo-id", default=DEFAULT_REPO_ID,

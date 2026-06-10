@@ -1,22 +1,24 @@
 # DUM-E — `dume`, la TUI del SO-101
 
-`dume` (DUM-E) es una TUI rica en iconos (Textual) que sirve de front-end amistoso
-para el proyecto. **No reemplaza ni modifica `cal`**: lo reusa por debajo (importa sus
-helpers y, para ops pesadas/interactivas, suspende la TUI y corre `./cal <subcmd>` con el
-terminal completo). `cal` sigue siendo la interfaz scriptable.
+`dume` (DUM-E) es una TUI rica en iconos (Textual) y, a la vez, un CLI scriptable
+(`dume run <subcmd>`): **dos modos sobre los mismos módulos `so101_cli`**. La TUI no
+reimplementa la lógica del robot; la reusa por import para lo de solo lectura y, para
+ops pesadas/interactivas, suspende la TUI y corre `dume run <subcmd>` con el terminal
+completo. (`dume run` reemplaza 1:1 al antiguo comando `cal`, que se eliminó.)
 
 ## Uso
 
 ```bash
 source .venv/bin/activate
-./dume                 # abre el cockpit (home)
-./dume teleop          # salta directo a una vista (placeholder hasta la Fase 2)
+./dume                 # abre el cockpit (home)  [modo TUI]
+./dume teleop          # salta directo a una vista TUI
 ./dume --ascii         # sin Nerd Font ni imágenes inline (terminales básicos)
+./dume run <subcmd>    # modo CLI scriptable (teleop/record-batch/eval/train/...)
 ```
 
 Atajos: `1-8` saltan de vista, `↑/↓ + Enter` navegan el sidebar, `r` refresca el cockpit,
-`c`/`f`/`s`/`S` corren `cal check` / `find-ports` / `scan-bus follower|leader` (suspenden la
-TUI), `?` ayuda, `q` salir.
+`c`/`f`/`s`/`S` corren `dume run check` / `find-ports` / `scan-bus follower|leader` (suspenden
+la TUI), `?` ayuda, `q` salir.
 
 El cockpit **no retiene el hardware**: sondea la conexión una vez al entrar y con `r`
 (cada sonda abre→pinga→cierra). Sin robot conectado, todo degrada a ✗ / "ninguno" y no crashea.
@@ -30,9 +32,9 @@ actions y un smoke test de imagen inline.
 
 Primera vista-formulario (`./dume teleop` o tecla `2`). Patrón que reusarán record/eval/train:
 campos editables (rate, grabar a disco + out, cámaras front/lateral, front-index) → un
-`CommandPreview` que re-compone `$ cal teleop …` en vivo → **Lanzar** suspende la TUI y corre
-`./cal teleop <flags>` con el TTY completo (lerobot toma teclado y la ventana de rerun). No
-reimplementa teleop: delega 1:1 en el subcomando de `cal`. El botón **Comprobar conexión** hace
+`CommandPreview` que re-compone `$ dume run teleop …` en vivo → **Lanzar** suspende la TUI y corre
+`dume run teleop <flags>` con el TTY completo (lerobot toma teclado y la ventana de rerun). No
+reimplementa teleop: delega 1:1 en el subcomando `dume run teleop`. El botón **Comprobar conexión** hace
 un pre-vuelo bajo demanda (`probe_connection()` en un worker: abre→pinga→cierra, sin retener el
 bus ni las cámaras) y avisa si falta leader/follower antes de lanzar.
 
@@ -41,8 +43,8 @@ siguientes (aparecen en el sidebar como "próxima fase", marcados con `·`).
 
 ## Distribución
 
-El proyecto ya trae el scaffolding de empaquetado (build backend `hatchling`, entry points
-`cal` y `dume`, nombre de distribución `dume`).
+El proyecto ya trae el scaffolding de empaquetado (build backend `hatchling`, un único entry
+point `dume` —que cubre TUI y `dume run`—, nombre de distribución `dume`).
 
 ### PyPI
 
@@ -54,7 +56,7 @@ uv build                      # o: python -m build  → dist/so101_dume-0.1.0-{w
 python -m twine upload dist/* # requiere credenciales de PyPI
 ```
 
-Instalación para usuarias finales (da los comandos `dume` y `cal`):
+Instalación para usuarias finales (da el comando `dume`, con TUI y `dume run`):
 
 ```bash
 pipx install dume       # o, sin publicar: pipx install 'git+https://github.com/<user>/<repo>'

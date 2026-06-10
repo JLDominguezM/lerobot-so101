@@ -1,4 +1,4 @@
-"""Subcomando top-level: ./cal push-dataset
+"""Subcomando top-level: dume run push-dataset
 
 Sube el dataset local a HuggingFace Hub.
 
@@ -6,10 +6,10 @@ El nombre de la carpeta local (derivado de cuando se grabó) no tiene que
 coincidir con el repo de HF donde se sube — se pasan por separado.
 
 Ejemplos:
-    ./cal push-dataset
-    ./cal push-dataset --hf-repo-id armandomm09/so101_terminal_sort
-    ./cal push-dataset --hf-repo-id armandomm09/so101_v2 --root /ruta/al/dataset
-    ./cal push-dataset --dry-run
+    dume run push-dataset
+    dume run push-dataset --hf-repo-id armandomm09/so101_terminal_sort
+    dume run push-dataset --hf-repo-id armandomm09/so101_v2 --root /ruta/al/dataset
+    dume run push-dataset --dry-run
 """
 
 from __future__ import annotations
@@ -54,9 +54,9 @@ def add_push_dataset_parser(sub: argparse._SubParsersAction, name: str = "push-d
             "Sube el dataset grabado con record-batch a HF Hub.\n"
             "El repo local y el repo de HF pueden tener nombres distintos.\n\n"
             "Ejemplos:\n"
-            "  ./cal push dataset\n"
-            "  ./cal push dataset --hf-repo-id armandomm09/so101_terminal_sort\n"
-            "  ./cal push dataset --dry-run\n"
+            "  dume run push dataset\n"
+            "  dume run push dataset --hf-repo-id armandomm09/so101_terminal_sort\n"
+            "  dume run push dataset --dry-run\n"
         ),
     )
     p.add_argument(
