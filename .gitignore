@@ -35,3 +35,11 @@ Thumbs.db
 
 .cache/
 models
+
+make_presentation.py
+
+dist/
+Formula/
+
+CLAUDE.md
+x.py

@@ -1,7 +1,9 @@
-/* Layout y colores de la TUI DUM-E. Base: theme `textual-dark` + estos ajustes. */
+/* Layout y colores de la TUI DUM-E. Base: theme `hacker` (so101_cli/dume/theme.py)
+   = fósforo verde sobre negro. Las variables $primary/$accent/$surface/... salen
+   de ese theme; acá solo afinamos el layout y subimos el "voltaje" del verde. */
 
 Screen {
-    background: $surface;
+    background: $background;   /* negro puro: las cards verdes flotan sobre negro */
 }
 
 #main {
@@ -13,7 +15,7 @@ Screen {
 #sidebar {
     width: 28;
     background: $panel;
-    border-right: tall $primary 40%;
+    border-right: tall $primary;
     padding: 1 1;
 }
 
@@ -22,7 +24,9 @@ Screen {
 }
 
 #sidebar > ListItem.--highlight {
-    background: $primary 30%;
+    background: $primary 25%;
+    color: $accent;
+    text-style: bold;
 }
 
 /* ---- content + cockpit grid ---------------------------------------- */
@@ -44,12 +48,16 @@ HomeView {
 }
 
 .card {
-    border: round $primary 60%;
+    border: round $primary 80%;
     border-title-color: $accent;
     border-title-style: bold;
     padding: 0 1;
     height: 1fr;
     overflow-y: auto;
+}
+
+.card:focus-within {
+    border: round $accent;
 }
 
 .card-body {
@@ -59,9 +67,59 @@ HomeView {
 /* ---- command preview ----------------------------------------------- */
 
 .command-preview {
-    background: $boost;
-    color: $text;
+    background: $surface;
+    color: $accent;
+    border-left: thick $primary;
     padding: 0 1;
+}
+
+/* ---- teleop (formulario Fase 2) ------------------------------------ */
+
+TeleopView {
+    height: 1fr;
+}
+
+#teleop-scroll {
+    height: 1fr;
+    padding: 1 2;
+}
+
+#teleop-head {
+    margin-bottom: 1;
+}
+
+/* las cards del form se dimensionan al contenido (no 1fr como en el cockpit) */
+#card-teleop-cfg, #card-teleop-pre {
+    height: auto;
+    margin-bottom: 1;
+}
+
+.form-row {
+    height: 3;
+    align: left middle;
+}
+
+.form-label {
+    width: 18;
+    content-align: left middle;
+    color: $secondary;
+}
+
+.form-input {
+    width: 36;
+}
+
+.section-label {
+    margin: 1 0 0 0;
+}
+
+#teleop-buttons {
+    height: auto;
+    margin-top: 1;
+}
+
+#teleop-buttons Button {
+    margin-right: 2;
 }
 
 /* ---- placeholder vista próxima fase -------------------------------- */

@@ -14,10 +14,12 @@ from textual.containers import Container, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Footer, Header, Static
 
+from . import theme
 from .capabilities import detect
 from .icons import icons_for
 from .screens.home import HomeView
 from .screens.placeholder import PlaceholderView
+from .screens.teleop import TeleopView
 from .widgets.sidebar import VIEWS, Sidebar
 
 
@@ -44,7 +46,7 @@ class HelpScreen(ModalScreen):
             ("q", "salir"),
         ]
         for k, d in rows:
-            t.append(f"  {k:<16}", style="bold cyan")
+            t.append(f"  {k:<16}", style=theme.S_KEY)
             t.append(f"{d}\n")
         yield Static(t, id="help-box")
 
@@ -83,10 +85,7 @@ class DumeApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
-        try:
-            self.theme = "textual-dark"
-        except Exception:
-            pass
+        theme.install(self)
         self.show_view(self._start_view)
 
     # ---- navegación -----------------------------------------------------
@@ -97,6 +96,8 @@ class DumeApp(App):
         content.remove_children()
         if view.key == "home" and view.builtin:
             content.mount(HomeView(self.caps, self.icons))
+        elif view.key == "teleop" and view.builtin:
+            content.mount(TeleopView(self.caps, self.icons))
         else:
             content.mount(PlaceholderView(view, self.icons))
         try:

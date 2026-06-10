@@ -61,7 +61,7 @@ Full flag reference for all `cal` subcommands: `so101_cli/COMMANDS.md`.
 ```bash
 # DUM-E: TUI rica en iconos (Textual), front-end de `cal`. NO modifica `cal`.
 ./dume                 # cockpit (home): conexión, brazos, datasets, modelos, quick actions
-./dume <view>          # salta a una vista (teleop/record/... son placeholder hasta fases sig.)
+./dume <view>          # salta a una vista (home + teleop son reales; record/eval/train... placeholder hasta fases sig.)
 ./dume --ascii         # sin Nerd Font ni imágenes inline
 ```
 
@@ -118,6 +118,18 @@ Calibration JSONs live in `calibrations/` (versioned) but LeRobot reads them fro
 ### Keyboard input
 
 `so101_cli/keys.py` provides `cbreak()` (context manager for raw tty mode) and `read_key(timeout)`. Used by interactive subcommands (`leader record-*`, `teleop`, `follower move --tune`). Quit conventions: `q` or Ctrl-C (`\x03`); status lines refresh at ~10 Hz via `last_show` throttling.
+
+### DUM-E TUI (`so101_cli/dume/`)
+
+A third front-end layer (Textual) over `cal` — see `docs/dume.md` for phases/packaging. It **never modifies `cal`**: it reuses `cal`'s logic by import for read-only/display work, and for anything heavy or interactive it suspends the TUI and shells out to `./cal`. Internal structure:
+
+- **`app.py::DumeApp`** — persistent sidebar + a `#content` container where views mount/unmount. Global key bindings (refresh `r`, quick actions `c`/`f`/`s`/`S`, jumps `1-9`) live on the app, not the views, so they work regardless of focus. `show_view()` routes by `view.key`; built-in views (`home`, `teleop`) get real widgets, everything else falls back to `PlaceholderView` ("next phase", marked `·` in the sidebar).
+- **`engine/`** — the non-UI core, all reusing `so101_cli` modules without touching them:
+  - `runner.py::run_cal(app, subcmd, *args)` — the **only** way to run heavy ops: `with app.suspend()` → `subprocess.call(["./cal", subcmd, ...])` → wait for Enter → return code. New record/eval/train/push actions go through this, never reimplement `cal` flows.
+  - `status.py::probe_connection()` — wraps `diagnostics._check_arm/_check_front/_check_lateral` into a `ConnectionStatus`. **Invariant: probes open→ping→close and never retain the bus or cameras** (exclusive resources; holding them would break teleop/record). Blocking, so call it from a Textual worker thread.
+  - `inventory.py` — disk-only scan of datasets (LeRobot cache), models (`outputs/train`, `models/`, HF hub cache), and arm/calibration summary. Missing dirs = empty, not error.
+- **`capabilities.py` + `icons.py`** — `detect()` reads the terminal env (+ `--ascii` / `DUME_ASCII`) into `Capabilities`; `icons_for()` picks the Nerd Font vs ASCII glyph set. Image protocol selection is delegated entirely to `textual-image`; capabilities only choose the icon set. Basic status marks (✓/✗/—) live in `widgets/status_pill.py`, not `icons.py`.
+- **View pattern (Phase 2+, see `screens/teleop.py`)** — editable form fields → a `CommandPreview` widget that recomposes `$ cal <subcmd> …` live → a **Launch** button that calls `run_cal`. Views never re-implement behavior; they compose flags and delegate 1:1 to a `cal` subcommand.
 
 ## Conventions worth knowing
 

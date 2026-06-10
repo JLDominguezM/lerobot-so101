@@ -11,6 +11,8 @@ from collections.abc import Iterable
 from rich.text import Text
 from textual.widgets import Static
 
+from ..theme import NEON
+
 
 class CommandPreview(Static):
     DEFAULT_CLASSES = "command-preview"
@@ -20,17 +22,19 @@ class CommandPreview(Static):
         self._parts = list(parts or [])
 
     def on_mount(self) -> None:
-        self._render()
+        self._rebuild()
 
     def set_command(self, parts: Iterable[str]) -> None:
         self._parts = list(parts)
-        self._render()
+        self._rebuild()
 
-    def _render(self) -> None:
+    # NB: no llamar a este método `_render` — `Widget._render()` es interno de
+    # Textual (devuelve el visual para el layout) y sobrescribirlo lo rompe.
+    def _rebuild(self) -> None:
         if not self._parts:
             self.update(Text("—", style="dim"))
             return
         t = Text()
-        t.append("$ ", style="bold green")
+        t.append("$ ", style=f"bold {NEON}")
         t.append(" ".join(self._parts), style="bold")
         self.update(t)

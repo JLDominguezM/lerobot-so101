@@ -19,6 +19,7 @@ from textual.containers import Grid, Vertical
 
 from ..engine.inventory import arm_summary, list_datasets, list_models
 from ..engine.status import probe_connection
+from ..theme import NEON, RED, S_KEY, S_OK
 from ..widgets.card import Card
 from ..widgets.status_pill import BAD, OK, pill_text
 
@@ -104,9 +105,9 @@ class HomeView(Vertical):
             t.append(f"   id    {a.id}   ", style="dim")
             if a.calib_present:
                 age = f"{a.calib_age_days:.0f}d" if a.calib_age_days is not None else "?"
-                t.append(f"calib ✓ ({age})\n", style="green")
+                t.append(f"calib ✓ ({age})\n", style=S_OK)
             else:
-                t.append("calib ✗ (falta)\n", style="red")
+                t.append("calib ✗ (falta)\n", style=RED)
         self.query_one("#card-arms", Card).set_body(t)
 
     def _fill_inventory(self) -> None:
@@ -116,7 +117,7 @@ class HomeView(Vertical):
             t.append("ninguno en cache\n", style="dim")
         else:
             for d in ds[:8]:
-                t.append("• ", style="cyan")
+                t.append("• ", style=NEON)
                 t.append(d.name, style="bold")
                 t.append(f"   {d.episodes} ep\n", style="dim")
             if len(ds) > 8:
@@ -129,7 +130,7 @@ class HomeView(Vertical):
             tm.append("ninguno\n", style="dim")
         else:
             for m in models[:8]:
-                tm.append("• ", style="cyan")
+                tm.append("• ", style=NEON)
                 tm.append(m.name, style="bold")
                 tm.append(f"   [{m.source}]\n", style="dim")
             if len(models) > 8:
@@ -143,9 +144,10 @@ class HomeView(Vertical):
                           ("f", "find-ports"),
                           ("s", "scan-bus follower"),
                           ("S", "scan-bus leader")):
-            t.append(f"  [{key}] ", style="bold cyan")
+            t.append(f"  [{key}] ", style=S_KEY)
             t.append(f"{desc}\n")
-        t.append("\nteleop / record / eval / train → próxima fase\n", style="dim italic")
+        t.append("\nteleop → vista propia (2)\n", style="dim italic")
+        t.append("record / eval / train → próxima fase\n", style="dim italic")
         self.query_one("#card-actions", Card).set_body(t)
 
     def _fill_image(self) -> None:
@@ -160,10 +162,10 @@ class HomeView(Vertical):
         try:
             from textual_image.widget import Image as AutoImage
         except Exception as e:  # textual-image ausente
-            card.set_body(Text(f"textual-image no disponible:\n{e}", style="red"))
+            card.set_body(Text(f"textual-image no disponible:\n{e}", style=RED))
             return
         try:
             card.body.display = False
             card.mount(AutoImage(str(path)))
         except Exception as e:
-            card.set_body(Text(f"no pude renderizar la imagen:\n{e}", style="red"))
+            card.set_body(Text(f"no pude renderizar la imagen:\n{e}", style=RED))

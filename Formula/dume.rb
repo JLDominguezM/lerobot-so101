@@ -16,7 +16,7 @@ class Dume < Formula
 
   desc "DUM-E TUI + cal CLI para operar el brazo SO-101 sobre LeRobot"
   homepage "https://github.com/armandomm09/so101"
-  url "https://files.pythonhosted.org/packages/source/s/so101-dume/so101_dume-0.1.0.tar.gz"
+  url "https://files.pythonhosted.org/packages/source/s/dume/so101_dume-0.1.0.tar.gz"
   sha256 "REEMPLAZAR_TRAS_PUBLICAR_EN_PYPI"
   license "MIT"
 

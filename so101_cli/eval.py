@@ -172,7 +172,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
     # robot. Evita el crash por HEAD a HF Hub cuando no hay internet (Errno 8).
     # --push necesita red, así que ahí forzamos online.
     offline = not args.online and not args.push
-    print(f"  red      : {'OFFLINE (solo cache)' if offline else 'online (permite descargas)'}")
+    print(f"  hub      : {'OFFLINE (solo cache)' if offline else 'online (permite descargas)'}")
     if args.n_action_steps is not None:
         print(f"  n_action_steps : {args.n_action_steps}  (override; checkpoint=50)")
     if args.num_steps is not None:

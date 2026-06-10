@@ -5,13 +5,15 @@ from __future__ import annotations
 from rich.text import Text
 from textual.widgets import Static
 
+from ..theme import AMBER, GREEN, RED
+
 OK = "ok"
 BAD = "bad"
 UNKNOWN = "unknown"
 
 _GLYPH = {OK: "✓", BAD: "✗", UNKNOWN: "—"}
 _GLYPH_ASCII = {OK: "OK", BAD: "X", UNKNOWN: "-"}
-_COLOR = {OK: "green", BAD: "red", UNKNOWN: "yellow"}
+_COLOR = {OK: GREEN, BAD: RED, UNKNOWN: AMBER}
 
 
 def pill_text(state: str, label: str = "", ascii_only: bool = False) -> Text:

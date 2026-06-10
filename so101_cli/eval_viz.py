@@ -5,11 +5,14 @@ Corre la policy entrenada en el robot real y la visualiza en rerun.
   - Policy ACT (ResNet-18): muestra un heatmap de activaciones por cámara — la
     magnitud L2 del último conv. Indica si el modelo mira el cable o el fondo.
     (No es "atención" transformer.)
-  - Policy SmolVLA (SigLIP + transformer): el heatmap de ResNet NO aplica, así
-    que se muestran solo los streams de cámara crudos mientras la policy corre.
-    Útil igual para ver qué ven las cámaras en el momento de decidir el pick.
+  - Policy SmolVLA (SigLIP + transformer): heatmap de la magnitud L2 por patch
+    del vision encoder SigLIP (rejilla 32x32; imagen 512, patch 16) — el análogo
+    VLA del heatmap de ResNet. Muestra qué parches "encienden" al decidir la
+    acción.
 
-El tipo se detecta automáticamente del config.json del checkpoint.
+Ambos tipos comparten la misma salida: rerun en <cam>/image|attention|overlay
+(con blueprint propio) y, además, una rejilla mp4 en outputs/ + ventana en vivo
+con --cv2. El tipo se detecta automáticamente del config.json del checkpoint.
 
 No necesita el brazo leader conectado.
 
@@ -35,14 +38,98 @@ POLICY_DEFAULT = "armandomm09/smolvla_terminal_sort"
 TASK_TEMPLATE  = "pick the {color} cable and place it in the {color} box"
 
 
+def _compose_grid_bgr(bare_obs, last_hm, order):
+    """Rejilla BGR para OpenCV/mp4: una fila por cámara = [image | attention | overlay].
+
+    `bare_obs` y `last_hm` vienen en RGB; aquí convertimos a BGR (lo que esperan
+    cv2.imshow / VideoWriter). Si aún no hay heatmap para una cámara, las columnas
+    attention/overlay salen en negro / imagen cruda.
+    """
+    import cv2
+    import numpy as np
+
+    rows = []
+    for name in order:
+        img = bare_obs.get(name)
+        if img is None:
+            continue
+        img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        hm = last_hm.get(name)
+        if hm is not None:
+            hm_bgr = cv2.cvtColor(hm, cv2.COLOR_RGB2BGR)
+            ov_bgr = cv2.addWeighted(img_bgr, 0.55, hm_bgr, 0.45, 0)
+        else:
+            hm_bgr = np.zeros_like(img_bgr)
+            ov_bgr = img_bgr.copy()
+        trio = []
+        for panel, lbl in [(img_bgr, f"{name} image"),
+                           (hm_bgr, f"{name} attention"),
+                           (ov_bgr, f"{name} overlay")]:
+            p = panel.copy()
+            cv2.rectangle(p, (0, 0), (p.shape[1], 24), (0, 0, 0), -1)
+            cv2.putText(p, lbl, (6, 17), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.55, (255, 255, 255), 1, cv2.LINE_AA)
+            trio.append(p)
+        rows.append(np.hstack(trio))
+    if not rows:
+        return None
+    w = max(r.shape[1] for r in rows)
+    rows = [r if r.shape[1] == w
+            else cv2.copyMakeBorder(r, 0, 0, 0, w - r.shape[1], cv2.BORDER_CONSTANT)
+            for r in rows]
+    return np.vstack(rows)
+
+
+def _tokens_to_heat_rgb(lhs, out_hw):
+    """Tokens de patch del SigLIP -> heatmap RGB uint8 (out_hw=(H,W)).
+
+    Toma la magnitud L2 por patch del last_hidden_state [B,N,D], la reacomoda a la
+    rejilla cuadrada (N=1024 -> 32x32), normaliza 0..1, la sube al tamaño de la
+    cámara y le aplica un colormap JET. Es el análogo SmolVLA del heatmap ResNet
+    de ACT: parches "calientes" = zonas con activación alta del encoder.
+    """
+    import math
+
+    import cv2
+    import numpy as np
+
+    feat = lhs[0].detach().float().cpu().numpy()        # [N, D]
+    mag = np.linalg.norm(feat, axis=-1)                 # [N]
+    g = int(math.isqrt(mag.shape[0]))
+    grid = mag[: g * g].reshape(g, g)
+    lo, hi = float(grid.min()), float(grid.max())
+    grid = (grid - lo) / (hi - lo + 1e-8)
+    heat = cv2.resize((grid * 255).astype(np.uint8), (out_hw[1], out_hw[0]),
+                      interpolation=cv2.INTER_CUBIC)
+    heat_bgr = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
+    return cv2.cvtColor(heat_bgr, cv2.COLOR_BGR2RGB)
+
+
+def _act_heat_rgb(heat_2d, out_hw):
+    """Feature map de ResNet (ACT) -> heatmap RGB uint8 (out_hw=(H,W)).
+
+    `heat_2d` es la magnitud L2 por celda del último conv (H',W'). La subimos a
+    la resolución de la cámara (clip al percentil 95 para que los bordes no
+    dominen) y le aplicamos un colormap JET — el análogo ACT de
+    `_tokens_to_heat_rgb`. Celdas calientes = donde el CNN responde más fuerte.
+    """
+    import cv2
+    import numpy as np
+    from lerobot_attention_visualizer import patch_heatmap_to_image
+
+    h = patch_heatmap_to_image(heat_2d, target_hw=tuple(out_hw))  # float [0,1] HxW
+    heat_bgr = cv2.applyColorMap((h * 255).astype(np.uint8), cv2.COLORMAP_JET)
+    return cv2.cvtColor(heat_bgr, cv2.COLOR_BGR2RGB)
+
+
 def add_eval_viz_parser(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser(
         "eval-viz",
         help="Corre la policy en el robot y visualiza el mapa de activaciones en rerun.",
         description=(
             "Ejecuta la policy en el follower y la muestra en rerun.\n"
-            "ACT: heatmap de activaciones ResNet (attention/<cam>/image|attention|overlay).\n"
-            "SmolVLA: solo streams de cámara (cameras/<cam>); el heatmap ResNet no aplica.\n\n"
+            "ACT: heatmap de activaciones ResNet (<cam>/image|attention|overlay).\n"
+            "SmolVLA: heatmap de magnitud por patch del encoder SigLIP (<cam>/attention|overlay|image).\n\n"
             "Ejemplos:\n"
             "  ./cal eval-viz --color red\n"
             "  ./cal eval-viz --color black --n 3\n"
@@ -82,6 +169,11 @@ def add_eval_viz_parser(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--online", action="store_true",
                    help="Permite peticiones a HF Hub. Por defecto corre OFFLINE "
                         "(solo cache local) para evitar el crash por DNS sin internet.")
+    p.add_argument("--cv2", action="store_true",
+                   help="Muestra una ventana OpenCV en vivo con la rejilla "
+                        "image|attention|overlay por cámara (más fiable que rerun).")
+    p.add_argument("--no-video", action="store_true",
+                   help="No guardar el mp4 de la rejilla (por defecto se guarda en outputs/).")
     p.set_defaults(func=cmd_eval_viz)
 
 
@@ -97,6 +189,10 @@ def cmd_eval_viz(args: argparse.Namespace) -> int:
 
     import json
 
+    import time as _time
+    from pathlib import Path
+
+    import cv2
     import torch
     import numpy as np
     from huggingface_hub import hf_hub_download
@@ -146,8 +242,8 @@ def cmd_eval_viz(args: argparse.Namespace) -> int:
     print(f"  task    : {task!r}")
     print(f"  policy  : {args.policy}  (type={policy_type})")
     print(f"  device  : {device}")
-    print(f"  red     : {'online (permite descargas)' if args.online else 'OFFLINE (solo cache)'}")
-    print(f"  viz     : {'heatmap ResNet' if is_act else 'solo cámaras (SmolVLA: heatmap ResNet no aplica)'}")
+    print(f"  hub     : {'online (permite descargas)' if args.online else 'OFFLINE (solo cache)'}")
+    print(f"  viz     : {'heatmap ResNet (ACT)' if is_act else 'heatmap SigLIP por patch (SmolVLA)'}")
     print(f"  fps     : {args.fps}  ({args.n} episodio(s) × {args.duration}s)")
     print(f"  cámaras : front" + ("" if args.no_lateral else " + lateral"))
     print()
@@ -182,15 +278,50 @@ def cmd_eval_viz(args: argparse.Namespace) -> int:
 
     interval = 1.0 / args.fps
 
-    # El heatmap ResNet solo existe para ACT. Para SmolVLA usamos un context
-    # vacío y logueamos las cámaras crudas con rerun directamente.
+    # ACT: heatmap de activaciones ResNet (paquete externo).
+    # SmolVLA: hookeamos el vision_model (SigLIP) para capturar el last_hidden_state
+    # por imagen y construir un heatmap de magnitud L2 por patch.
+    import contextlib
+    import rerun as rr
+
+    hook_handle = None
+    captured: list = []          # last_hidden_state por imagen, en orden de embed
+    embed_order: list[str] = []  # nombres de cámara en el orden que el modelo embebe
+    last_hm: dict = {}           # cam -> heatmap RGB (persiste entre forwards del VLM)
+    writer = None                # cv2.VideoWriter (lazy: lo abrimos al 1er frame)
+    save_video = not args.no_video
+    video_path = Path("outputs") / f"eval_viz_{args.color}_{int(_time.time())}.mp4"
     if is_act:
         from lerobot_attention_visualizer import ACTAttention
         viz = ACTAttention(policy)
+        embed_order = [k for k in viz.camera_keys() if k in cameras]
+        print(f"  → ACT heatmap ResNet por celda sobre: {embed_order}")
     else:
-        import contextlib
-        import rerun as rr
         viz = contextlib.nullcontext()
+        vision_model = policy.model.vlm_with_expert.get_vlm_model().vision_model
+        hook_handle = vision_model.register_forward_hook(
+            lambda m, i, o: captured.append(o.last_hidden_state)
+        )
+        _short = lambda k: k.split(".")[-1]  # noqa: E731
+        embed_order = [_short(k) for k in policy.config.image_features
+                       if _short(k) in cameras]
+        print(f"  → SmolVLA heatmap SigLIP por patch sobre: {embed_order}")
+
+    # Forzamos un blueprint propio (ACT y SmolVLA): rerun a veces recuerda un
+    # layout viejo y deja los paneles en blanco aunque la data SÍ esté logueada.
+    # Esto los ata a nuestras entidades <cam>/image|attention|overlay en rejilla.
+    try:
+        import rerun.blueprint as rrb
+        views = []
+        for name in embed_order:
+            views += [
+                rrb.Spatial2DView(origin=f"{name}/image", name=f"{name} image"),
+                rrb.Spatial2DView(origin=f"{name}/attention", name=f"{name} attention"),
+                rrb.Spatial2DView(origin=f"{name}/overlay", name=f"{name} overlay"),
+            ]
+        rr.send_blueprint(rrb.Blueprint(rrb.Grid(*views, grid_columns=3)))
+    except Exception as e:
+        print(f"  (blueprint rerun no aplicado: {e})")
 
     def _bare_images(obs: dict) -> dict:
         """Extrae las imágenes de cámara como uint8 HWC (sin prefijo)."""
@@ -214,6 +345,7 @@ def cmd_eval_viz(args: argparse.Namespace) -> int:
 
                 while time.perf_counter() < t_end:
                     t0 = time.perf_counter()
+                    captured.clear()  # solo nos importan los forwards de ESTE paso
 
                     obs = follower.get_observation()
 
@@ -231,13 +363,56 @@ def cmd_eval_viz(args: argparse.Namespace) -> int:
                     follower.send_action(action_dict)
 
                     bare_obs = _bare_images(obs)
+
+                    # Actualiza last_hm (cam -> heatmap RGB) según el tipo de
+                    # policy. En ambos casos el heatmap solo se recalcula cuando
+                    # hubo un forward fresco del backbone (la cola de action
+                    # chunking se vació); si no, se conserva el último para que
+                    # los paneles no parpadeen.
                     if is_act:
-                        # log_overlay espera el dict raw uint8 HWC (lo que da
-                        # get_observation antes del preprocessor).
-                        viz.log_overlay(bare_obs)
+                        # ACT corre el ResNet una vez por cámara al refrescar la
+                        # cola; viz._capture juntó los feature maps de ese forward.
+                        heats = viz._capture.activation_heatmaps()
+                        if heats and len(heats) == len(embed_order):
+                            for name, heat in zip(embed_order, heats):
+                                if name in bare_obs:
+                                    last_hm[name] = _act_heat_rgb(
+                                        heat[0], bare_obs[name].shape[:2])
+                        viz._capture.clear()
                     else:
-                        for k, img in bare_obs.items():
-                            rr.log(f"cameras/{k}", rr.Image(img))
+                        if captured and len(captured) == len(embed_order):
+                            for name, lhs in zip(embed_order, captured):
+                                if name in bare_obs:
+                                    last_hm[name] = _tokens_to_heat_rgb(
+                                        lhs, bare_obs[name].shape[:2])
+
+                    # Salida unificada (ACT y SmolVLA): rerun + rejilla mp4/cv2.
+                    for k, img in bare_obs.items():
+                        rr.log(f"cameras/{k}", rr.Image(img))
+                        rr.log(f"{k}/image", rr.Image(img))
+                        hm = last_hm.get(k)
+                        if hm is not None:
+                            overlay = cv2.addWeighted(img, 0.55, hm, 0.45, 0)
+                            rr.log(f"{k}/attention", rr.Image(hm))
+                            rr.log(f"{k}/overlay", rr.Image(overlay))
+
+                    # Rejilla OpenCV (image|attention|overlay) a mp4 y, si --cv2,
+                    # también ventana en vivo.
+                    grid = _compose_grid_bgr(bare_obs, last_hm, embed_order)
+                    if grid is not None:
+                        if save_video and writer is None:
+                            video_path.parent.mkdir(parents=True, exist_ok=True)
+                            writer = cv2.VideoWriter(
+                                str(video_path),
+                                cv2.VideoWriter_fourcc(*"mp4v"),
+                                float(args.fps),
+                                (grid.shape[1], grid.shape[0]),
+                            )
+                        if writer is not None:
+                            writer.write(grid)
+                        if args.cv2:
+                            cv2.imshow("eval-viz  [image | attention | overlay]", grid)
+                            cv2.waitKey(1)
 
                     precise_sleep(max(0.0, interval - (time.perf_counter() - t0)))
 
@@ -246,7 +421,21 @@ def cmd_eval_viz(args: argparse.Namespace) -> int:
     except KeyboardInterrupt:
         print("\nInterrumpido.")
     finally:
-        follower.disconnect()
-        print("Robot desconectado.")
+        if hook_handle is not None:
+            hook_handle.remove()
+        if writer is not None:
+            writer.release()
+            print(f"Video guardado: {video_path}")
+        if args.cv2:
+            cv2.destroyAllWindows()
+        # disconnect() puede tirar "Overload error" en un motor (p.ej. el gripper
+        # forzado por la extensión): lo atrapamos para no abortar feo el proceso
+        # — la grabación de rerun ya está en el viewer de todos modos.
+        try:
+            follower.disconnect()
+            print("Robot desconectado.")
+        except Exception as e:
+            print(f"Aviso: disconnect() falló ({e}). "
+                  f"Revisa el motor reportado (puede estar en sobrecarga).")
 
     return 0

@@ -21,16 +21,28 @@ TUI), `?` ayuda, `q` salir.
 El cockpit **no retiene el hardware**: sondea la conexión una vez al entrar y con `r`
 (cada sonda abre→pinga→cierra). Sin robot conectado, todo degrada a ✗ / "ninguno" y no crashea.
 
-## Fase 1 (este milestone)
+## Fase 1
 
 Foundation + Home cockpit: cards de conexión, brazos+calibración, datasets, modelos, quick
-actions y un smoke test de imagen inline. Teleop, formularios de record/eval/train y los
-browsers llegan en fases siguientes (aparecen en el sidebar como "próxima fase").
+actions y un smoke test de imagen inline.
+
+## Fase 2 — Teleop (este milestone)
+
+Primera vista-formulario (`./dume teleop` o tecla `2`). Patrón que reusarán record/eval/train:
+campos editables (rate, grabar a disco + out, cámaras front/lateral, front-index) → un
+`CommandPreview` que re-compone `$ cal teleop …` en vivo → **Lanzar** suspende la TUI y corre
+`./cal teleop <flags>` con el TTY completo (lerobot toma teclado y la ventana de rerun). No
+reimplementa teleop: delega 1:1 en el subcomando de `cal`. El botón **Comprobar conexión** hace
+un pre-vuelo bajo demanda (`probe_connection()` en un worker: abre→pinga→cierra, sin retener el
+bus ni las cámaras) y avisa si falta leader/follower antes de lanzar.
+
+Los formularios de record/eval/train y los browsers de datasets/modelos llegan en fases
+siguientes (aparecen en el sidebar como "próxima fase", marcados con `·`).
 
 ## Distribución
 
 El proyecto ya trae el scaffolding de empaquetado (build backend `hatchling`, entry points
-`cal` y `dume`, nombre de distribución `so101-dume`).
+`cal` y `dume`, nombre de distribución `dume`).
 
 ### PyPI
 
@@ -45,8 +57,8 @@ python -m twine upload dist/* # requiere credenciales de PyPI
 Instalación para usuarias finales (da los comandos `dume` y `cal`):
 
 ```bash
-pipx install so101-dume       # o, sin publicar: pipx install 'git+https://github.com/<user>/<repo>'
-uv tool install so101-dume
+pipx install dume       # o, sin publicar: pipx install 'git+https://github.com/<user>/<repo>'
+uv tool install dume
 ```
 
 ### Homebrew

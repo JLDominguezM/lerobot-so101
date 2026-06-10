@@ -22,7 +22,7 @@ class View:
 
 VIEWS: list[View] = [
     View("home",        "Home",        "home",    True),
-    View("teleop",      "Teleop",      "teleop",  False),
+    View("teleop",      "Teleop",      "teleop",  True),
     View("record",      "Record",      "record",  False),
     View("eval",        "Eval",        "eval",    False),
     View("train",       "Train",       "train",   False),
